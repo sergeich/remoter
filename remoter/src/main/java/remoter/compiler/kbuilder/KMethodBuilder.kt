@@ -903,6 +903,11 @@ class KMethodBuilder(remoterInterfaceElement: Element, bindingManager: KBindingM
 
                 .addStatement("var mappedCode = code")
                 .addStatement("val callingUid = %T.getMappedUid(Binder.getCallingUid())", RemoterGlobalProperties::class.java)
+
+                .beginControlFlow("if (callingUid == 0)")
+                .addStatement("return code")
+                .endControlFlow()
+
                 .addStatement("var __lastMethodIndexOfProxy = __processLastMethodMap.getOrDefault(callingUid, -1)")
 
                 .beginControlFlow("if (__lastMethodIndexOfProxy == -1)")

@@ -468,6 +468,11 @@ class MethodBuilder extends RemoteBuilder {
 
                 .addStatement("int mappedCode = code")
                 .addStatement("int callingUid = $T.getMappedUid(Binder.getCallingUid())", RemoterGlobalProperties.class)
+
+                .beginControlFlow("if (callingUid == 0)")
+                .addStatement("return code")
+                .endControlFlow()
+
                 .addStatement("int __lastMethodIndexOfProxy = __processLastMethodMap.getOrDefault(callingUid, -1)")
 
                 .beginControlFlow("if (__lastMethodIndexOfProxy == -1)")
