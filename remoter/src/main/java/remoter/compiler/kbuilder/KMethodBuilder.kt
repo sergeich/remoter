@@ -6,7 +6,6 @@ import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
-import com.squareup.kotlinpoet.MAP
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -148,7 +147,8 @@ class KMethodBuilder(
         }
         methodCall += ")"
 
-        methodBuilder.addStatement("%T.set(${ParamBuilder.DATA}.readHashMap(javaClass.getClassLoader()))", RemoterGlobalProperties::class.java)
+        methodBuilder.addStatement("val __gp_bundle = ${ParamBuilder.DATA}.readBundle(javaClass.getClassLoader())")
+        methodBuilder.addStatement("%T.set(__gp_bundle?.keySet()?.associateWith { __gp_bundle.getString(it) })", RemoterGlobalProperties::class.java)
 
         if (isSuspendFunction) {
             if (!isSuspendUnit) {
@@ -301,7 +301,9 @@ class KMethodBuilder(
             remoterCall = "_getRemoteServiceBinderSuspended().transact"
         }
 
-        methodBuilder.addStatement("${ParamBuilder.DATA}.writeMap(__global_properties as %T<*, *>?)", MAP)
+        methodBuilder.addStatement("val __gp_bundle = %T()", ClassName("android.os", "Bundle"))
+        methodBuilder.addStatement("__global_properties?.forEach { (k, v) -> __gp_bundle.putString(k, v.toString()) }")
+        methodBuilder.addStatement("${ParamBuilder.DATA}.writeBundle(if (__global_properties != null) __gp_bundle else null)")
 
         if (isOneWay) {
             methodBuilder.addStatement("$remoterCall(TRANSACTION_${methodName}_$methodIndex, ${ParamBuilder.DATA}, null, android.os.IBinder.FLAG_ONEWAY)")
@@ -593,10 +595,10 @@ class KMethodBuilder(
         val methodBuilderNonSuspended = FunSpec.builder("_getRemoteServiceBinder")
             .addModifiers(KModifier.PRIVATE)
             .returns(ClassName("android.os", "IBinder"))
-            .addParameter(ParameterSpec.builder("waitForInit", Boolean::class).defaultValue("true").build())
 
         if (bindingManager.hasRemoterBuilder()) {
             methodBuilderNonSuspended
+                .addParameter(ParameterSpec.builder("waitForInit", Boolean::class).defaultValue("true").build())
                 .beginControlFlow("val result = if (remoteBinder != null)")
                 .addStatement("remoteBinder")
                 .endControlFlow()
@@ -621,8 +623,9 @@ class KMethodBuilder(
     }
 
     private fun addGetId(classBuilder: TypeSpec.Builder) {
-        addGetIdMethod(classBuilder, "__remoter_getStubID", "TRANSACTION__getStubID", "_getRemoteServiceBinder(false)")
-        addGetIdMethod(classBuilder, "__remoter_getStubProcessID", "TRANSACTION__getStubProcessID", "_getRemoteServiceBinder(false)")
+        val getBinderCall = if (bindingManager.hasRemoterBuilder()) "_getRemoteServiceBinder(false)" else "_getRemoteServiceBinder()"
+        addGetIdMethod(classBuilder, "__remoter_getStubID", "TRANSACTION__getStubID", getBinderCall)
+        addGetIdMethod(classBuilder, "__remoter_getStubProcessID", "TRANSACTION__getStubProcessID", getBinderCall)
         if (bindingManager.hasRemoterBuilder()) {
             addGetIdMethod(classBuilder, "__remoter_getStubID_sus", "TRANSACTION__getStubID", "_getRemoteServiceBinderSuspended(false)", true)
             addGetIdMethod(classBuilder, "__remoter_getStubProcessID_sus", "TRANSACTION__getStubProcessID", "_getRemoteServiceBinderSuspended(false)", true)
