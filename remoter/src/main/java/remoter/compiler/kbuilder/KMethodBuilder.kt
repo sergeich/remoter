@@ -70,7 +70,7 @@ class KMethodBuilder(
 
         processRemoterElements(classBuilder, object : ElementVisitor {
             override fun visitElement(classBuilder: TypeSpec.Builder, member: KSFunctionDeclaration, methodIndex: Int, methodBuilder: FunSpec.Builder?) {
-                addStubMethods(classBuilder, member, methodIndex, methodBuilder!!)
+                addStubMethods(member, methodIndex, methodBuilder!!)
             }
         }, methodBuilder)
 
@@ -101,7 +101,6 @@ class KMethodBuilder(
     }
 
     private fun addStubMethods(
-        classBuilder: TypeSpec.Builder,
         member: KSFunctionDeclaration,
         methodIndex: Int,
         methodBuilder: FunSpec.Builder
@@ -286,7 +285,7 @@ class KMethodBuilder(
         methodBuilder.addStatement("${ParamBuilder.DATA}.writeInterfaceToken(DESCRIPTOR)")
 
         val outParams = mutableListOf<KSValueParameter>()
-        for ((paramIndex, param) in member.parameters.withIndex()) {
+        for (param in member.parameters) {
             val paramType = when {
                 param.annotations.any { it.shortName.asString() == "ParamIn" } -> ParamBuilder.ParamType.IN
                 param.annotations.any { it.shortName.asString() == "ParamOut" } -> ParamBuilder.ParamType.OUT
@@ -550,7 +549,9 @@ class KMethodBuilder(
         var typeAddition = ""
         if (totalTypesArguments > 0) {
             typeAddition = "<*"
-            for (index in 1 until totalTypesArguments) typeAddition += ",*"
+            (1 until totalTypesArguments).forEach {
+                typeAddition += ",*"
+            }
             typeAddition += ">"
         }
         val methodBuilder = FunSpec.builder("equals")
@@ -662,7 +663,7 @@ class KMethodBuilder(
     }
 
     private fun addStubDestroyMethods(classBuilder: TypeSpec.Builder) {
-        var methodBuilder = FunSpec.builder("destroyStub")
+        val methodBuilder = FunSpec.builder("destroyStub")
             .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
             .beginControlFlow("try")
             .addStatement("this.attachInterface(null, DESCRIPTOR)")

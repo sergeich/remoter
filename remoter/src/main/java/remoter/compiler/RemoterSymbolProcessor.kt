@@ -18,7 +18,7 @@ class RemoterSymbolProcessor(private val env: SymbolProcessorEnvironment) : Symb
         symbols.filterIsInstance<KSClassDeclaration>()
             .filter { it.classKind == ClassKind.INTERFACE }
             .forEach { classDecl ->
-                val classesToWrap = classDecl.getClassesToWrap(resolver)
+                val classesToWrap = classDecl.getClassesToWrap()
                 if (classesToWrap.isNotEmpty()) {
                     classesToWrap.forEach { generateClassesFor(it, bindingManager) }
                 } else {
@@ -41,7 +41,7 @@ class RemoterSymbolProcessor(private val env: SymbolProcessorEnvironment) : Symb
     /**
      * Reads the classesToWrap attribute of the @Remoter annotation on a marker interface.
      */
-    private fun KSClassDeclaration.getClassesToWrap(resolver: Resolver): List<KSClassDeclaration> {
+    private fun KSClassDeclaration.getClassesToWrap(): List<KSClassDeclaration> {
         val remoterAnnotation = annotations.find {
             it.annotationType.resolve().declaration.qualifiedName?.asString() == Remoter::class.qualifiedName
         } ?: return emptyList()

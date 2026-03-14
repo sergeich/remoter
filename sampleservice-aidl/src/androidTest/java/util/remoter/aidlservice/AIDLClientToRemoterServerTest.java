@@ -34,7 +34,7 @@ import static util.remoter.aidlservice.ServiceIntents.INTENT_AIDL_TEST_ACTIVITY;
 public class AIDLClientToRemoterServerTest {
 
     private static final String TAG = AIDLClientToRemoterServerTest.class.getSimpleName();
-    private Object objectLock = new Object();
+    private final Object objectLock = new Object();
     private ISampleService sampleService;
 
 
@@ -62,8 +62,7 @@ public class AIDLClientToRemoterServerTest {
     public ActivityTestRule<TestActivity> mActivityRule = new ActivityTestRule<TestActivity>(TestActivity.class) {
         @Override
         protected Intent getActivityIntent() {
-            Intent intent = new Intent(INTENT_AIDL_TEST_ACTIVITY);
-            return intent;
+            return new Intent(INTENT_AIDL_TEST_ACTIVITY);
         }
     };
 
@@ -117,10 +116,10 @@ public class AIDLClientToRemoterServerTest {
         Log.i(TAG, "Boolean Result " + result);
 
         Assert.assertEquals(a, result);
-        Assert.assertEquals(true, arrayOut[0]);
-        Assert.assertEquals(false, arrayOut[1]);
-        Assert.assertEquals(false, arrayInOut[0]);
-        Assert.assertEquals(false, arrayInOut[1]);
+        Assert.assertTrue(arrayOut[0]);
+        Assert.assertFalse(arrayOut[1]);
+        Assert.assertFalse(arrayInOut[0]);
+        Assert.assertFalse(arrayInOut[1]);
     }
 
     @Test
