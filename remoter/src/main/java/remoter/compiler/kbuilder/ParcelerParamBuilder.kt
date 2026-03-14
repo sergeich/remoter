@@ -1,31 +1,26 @@
 package remoter.compiler.kbuilder
 
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.FunSpec
-import org.jetbrains.annotations.Nullable
-import javax.lang.model.element.Element
-import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.VariableElement
-import javax.lang.model.type.ArrayType
-import javax.lang.model.type.TypeKind
-import javax.lang.model.type.TypeMirror
 
 
 /**
  * A [ParamBuilder] for Parcel type parameters
  */
-internal class ParcelerParamBuilder(remoterInterfaceElement: Element, bindingManager: KBindingManager) : ParamBuilder(remoterInterfaceElement, bindingManager) {
+internal class ParcelerParamBuilder(remoterInterfaceElement: KSClassDeclaration, bindingManager: KBindingManager) : ParamBuilder(remoterInterfaceElement, bindingManager) {
 
-    override fun writeParamsToProxy(param: VariableElement, paramType: ParamType, methodBuilder: FunSpec.Builder) {
-        if (param.asType().kind == TypeKind.ARRAY) {
+    override fun writeParamsToProxy(param: KSValueParameter, paramType: ParamType, methodBuilder: FunSpec.Builder) {
+        if (param.asType().isArrayType()) {
             if (paramType == ParamType.OUT) {
                 writeArrayOutParamsToProxy(param, methodBuilder)
             } else {
                 if (param.isNullable()) {
-
                     methodBuilder.beginControlFlow("if (" + param.simpleName + " != null)")
                     methodBuilder.addStatement("$DATA.writeInt(" + param.simpleName + ".size)")
                     methodBuilder.beginControlFlow("for (___remoter_p_item in ${param.simpleName})")
-
                     methodBuilder.addStatement("val pClass" + param.simpleName + " = getParcelerClass(___remoter_p_item)")
                     methodBuilder.beginControlFlow("if (pClass" + param.simpleName + " != null)")
                     methodBuilder.addStatement("$DATA.writeString(pClass" + param.simpleName + ".getName())")
@@ -36,19 +31,15 @@ internal class ParcelerParamBuilder(remoterInterfaceElement: Element, bindingMan
                     methodBuilder.beginControlFlow("else")
                     methodBuilder.addStatement("$DATA.writeInt(-1)")
                     methodBuilder.endControlFlow()
-
                 } else {
-
                     methodBuilder.addStatement("$DATA.writeInt(" + param.simpleName + ".size)")
                     methodBuilder.beginControlFlow("for (___remoter_p_item in ${param.simpleName})")
-
                     methodBuilder.addStatement("val pClass" + param.simpleName + " = getParcelerClass(___remoter_p_item)")
                     methodBuilder.beginControlFlow("if (pClass" + param.simpleName + " != null)")
                     methodBuilder.addStatement("$DATA.writeString(pClass" + param.simpleName + ".getName())")
                     methodBuilder.addStatement("org.parceler.Parcels.wrap(pClass" + param.simpleName + ", ___remoter_p_item).writeToParcel($DATA, 0)")
                     methodBuilder.endControlFlow()
                     methodBuilder.endControlFlow()
-
                 }
             }
         } else {
@@ -81,8 +72,8 @@ internal class ParcelerParamBuilder(remoterInterfaceElement: Element, bindingMan
         }
     }
 
-    override fun readResultsFromStub(methodElement: ExecutableElement, resultType: TypeMirror, methodBuilder: FunSpec.Builder) {
-        if (resultType.kind == TypeKind.ARRAY) {
+    override fun readResultsFromStub(methodElement: KSFunctionDeclaration, resultType: KSType, methodBuilder: FunSpec.Builder) {
+        if (resultType.isArrayType()) {
             if (methodElement.isNullable()) {
                 methodBuilder.beginControlFlow("if ($RESULT != null)")
                 methodBuilder.addStatement("$REPLY.writeInt($RESULT.size)")
@@ -123,8 +114,8 @@ internal class ParcelerParamBuilder(remoterInterfaceElement: Element, bindingMan
         }
     }
 
-    override fun readOutResultsFromStub(param: VariableElement, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
-        if (param.asType().kind == TypeKind.ARRAY) {
+    override fun readOutResultsFromStub(param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
+        if (param.asType().isArrayType()) {
             if (param.isNullable()) {
                 methodBuilder.beginControlFlow("if ($paramName != null)")
                 methodBuilder.addStatement("$REPLY.writeInt($paramName!!.size)")
@@ -148,17 +139,15 @@ internal class ParcelerParamBuilder(remoterInterfaceElement: Element, bindingMan
         }
     }
 
-    override fun readResultsFromProxy(methodType: ExecutableElement, methodBuilder: FunSpec.Builder) {
+    override fun readResultsFromProxy(methodType: KSFunctionDeclaration, methodBuilder: FunSpec.Builder) {
         val resultType = methodType.getReturnAsKotlinType()
-        val resultMirror = methodType.getReturnAsTypeMirror()
-        if (resultMirror.kind == TypeKind.ARRAY) {
+        val resultKSType = methodType.getReturnAsKSType()
+        if (resultKSType.isArrayType()) {
             methodBuilder.addStatement("val __size_result = $REPLY.readInt()")
             methodBuilder.beginControlFlow("if (__size_result >= 0)")
-
             methodBuilder.beginControlFlow("$RESULT = %T (__size_result) ", resultType.copy(false))
-            methodBuilder.addStatement("getParcelerObject($REPLY.readString(), $REPLY) as %T", (resultMirror as ArrayType).componentType)
+            methodBuilder.addStatement("getParcelerObject($REPLY.readString(), $REPLY) as %T", resultKSType.componentType().asKotlinType())
             methodBuilder.endControlFlow()
-
             methodBuilder.endControlFlow()
             methodBuilder.beginControlFlow("else")
             if (resultType.isNullable) {
@@ -167,8 +156,6 @@ internal class ParcelerParamBuilder(remoterInterfaceElement: Element, bindingMan
                 methodBuilder.addStatement("throw %T(\"Unexpected null result\")", NullPointerException::class)
             }
             methodBuilder.endControlFlow()
-
-
         } else {
             methodBuilder.beginControlFlow("if ($REPLY.readInt() != 0)")
             methodBuilder.addStatement("$RESULT = getParcelerObject($REPLY.readString(), $REPLY) as %T", resultType.copy(false))
@@ -183,16 +170,16 @@ internal class ParcelerParamBuilder(remoterInterfaceElement: Element, bindingMan
         }
     }
 
-    override fun writeParamsToStub(methodType: ExecutableElement, param: VariableElement, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
+    override fun writeParamsToStub(methodType: KSFunctionDeclaration, param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
         super.writeParamsToStub(methodType, param, paramType, paramName, methodBuilder)
-        if (param.asType().kind == TypeKind.ARRAY) {
+        if (param.asType().isArrayType()) {
             if (paramType == ParamType.OUT) {
                 _writeOutParamsToStub(param, paramType, paramName, methodBuilder)
             } else {
                 methodBuilder.addStatement("val size_$paramName = $DATA.readInt()")
                 methodBuilder.beginControlFlow("if (size_$paramName >= 0)")
                 methodBuilder.beginControlFlow("$paramName = %T(size_$paramName)", param.asKotlinType().copy(false))
-                methodBuilder.addStatement("getParcelerObject($DATA.readString(), $DATA) as %T", (param.asType() as ArrayType).componentType.asKotlinType())
+                methodBuilder.addStatement("getParcelerObject($DATA.readString(), $DATA) as %T", param.asType().componentType().asKotlinType())
                 methodBuilder.endControlFlow()
                 methodBuilder.endControlFlow()
                 methodBuilder.beginControlFlow("else")
@@ -205,7 +192,7 @@ internal class ParcelerParamBuilder(remoterInterfaceElement: Element, bindingMan
             }
         } else {
             methodBuilder.beginControlFlow("if ( $DATA.readInt() != 0)")
-            methodBuilder.addStatement("$paramName = getParcelerObject($DATA.readString(), $DATA) as %T", param.asType())
+            methodBuilder.addStatement("$paramName = getParcelerObject($DATA.readString(), $DATA) as %T", param.asKotlinType())
             methodBuilder.endControlFlow()
             methodBuilder.beginControlFlow("else")
             if (param.isNullable()) {
@@ -220,7 +207,7 @@ internal class ParcelerParamBuilder(remoterInterfaceElement: Element, bindingMan
     /**
      * Called to generate code to write @[remoter.annotations.ParamOut] params for stub
      */
-    private fun _writeOutParamsToStub(param: VariableElement, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
+    private fun _writeOutParamsToStub(param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
         if (paramType != ParamType.IN) {
             methodBuilder.addStatement("val " + paramName + "_length = $DATA.readInt()")
             methodBuilder.beginControlFlow("if (" + paramName + "_length < 0 )")
@@ -229,28 +216,28 @@ internal class ParcelerParamBuilder(remoterInterfaceElement: Element, bindingMan
             } else {
                 methodBuilder.beginControlFlow(paramName + " = " + param.asKotlinType()
                         + "(0)")
-                methodBuilder.addStatement("%T()", (param.asType() as ArrayType).componentType.asKotlinType())
+                methodBuilder.addStatement("%T()", param.asType().componentType().asKotlinType())
                 methodBuilder.endControlFlow()
             }
             methodBuilder.endControlFlow()
             methodBuilder.beginControlFlow("else")
             methodBuilder.beginControlFlow(paramName + " = " + param.asKotlinType().copy(false)
                     + "(" + paramName + "_length)")
-            methodBuilder.addStatement("%T()", (param.asType() as ArrayType).componentType.asKotlinType())
+            methodBuilder.addStatement("%T()", param.asType().componentType().asKotlinType())
             methodBuilder.endControlFlow()
             methodBuilder.endControlFlow()
         }
     }
 
-    override fun readOutParamsFromProxy(param: VariableElement, paramType: ParamType, methodBuilder: FunSpec.Builder) {
+    override fun readOutParamsFromProxy(param: KSValueParameter, paramType: ParamType, methodBuilder: FunSpec.Builder) {
         if (paramType != ParamType.IN) {
-            if (param.asType().kind == TypeKind.ARRAY) {
+            if (param.asType().isArrayType()) {
                 methodBuilder.addStatement("val _size_" + param.simpleName + " = $REPLY.readInt()")
                 methodBuilder.beginControlFlow("for(i in 0 until _size_" + param.simpleName + ")")
                 if (param.isNullable()) {
-                    methodBuilder.addStatement(param.simpleName.toString() + "?.set(i, getParcelerObject($REPLY.readString(), $REPLY) as %T)", (param.asType() as ArrayType).componentType)
+                    methodBuilder.addStatement(param.simpleName + "?.set(i, getParcelerObject($REPLY.readString(), $REPLY) as %T)", param.asType().componentType().asKotlinType())
                 } else {
-                    methodBuilder.addStatement(param.simpleName.toString() + ".set(i, getParcelerObject($REPLY.readString(), $REPLY) as %T)", (param.asType() as ArrayType).componentType)
+                    methodBuilder.addStatement(param.simpleName + ".set(i, getParcelerObject($REPLY.readString(), $REPLY) as %T)", param.asType().componentType().asKotlinType())
                 }
                 methodBuilder.endControlFlow()
             }

@@ -1,19 +1,18 @@
 package remoter.compiler.kbuilder
 
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.FunSpec
-import javax.lang.model.element.Element
-import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.VariableElement
-import javax.lang.model.type.TypeKind
-import javax.lang.model.type.TypeMirror
 
 
 /**
  * A [ParamBuilder] for char type parameters
  */
-internal class CharParamBuilder(remoterInterfaceElement: Element, bindingManager: KBindingManager) : ParamBuilder(remoterInterfaceElement, bindingManager) {
-    override fun writeParamsToProxy(param: VariableElement, paramType: ParamType, methodBuilder: FunSpec.Builder) {
-        if (param.asType().kind == TypeKind.ARRAY) {
+internal class CharParamBuilder(remoterInterfaceElement: KSClassDeclaration, bindingManager: KBindingManager) : ParamBuilder(remoterInterfaceElement, bindingManager) {
+    override fun writeParamsToProxy(param: KSValueParameter, paramType: ParamType, methodBuilder: FunSpec.Builder) {
+        if (param.asType().isArrayType()) {
             if (paramType == ParamType.OUT) {
                 writeArrayOutParamsToProxy(param, methodBuilder)
             } else {
@@ -24,18 +23,18 @@ internal class CharParamBuilder(remoterInterfaceElement: Element, bindingManager
         }
     }
 
-    override fun readResultsFromStub(methodElement: ExecutableElement, resultType: TypeMirror, methodBuilder: FunSpec.Builder) {
-        if (resultType.kind == TypeKind.ARRAY) {
+    override fun readResultsFromStub(methodElement: KSFunctionDeclaration, resultType: KSType, methodBuilder: FunSpec.Builder) {
+        if (resultType.isArrayType()) {
             methodBuilder.addStatement("$REPLY.writeCharArray($RESULT)")
         } else {
             methodBuilder.addStatement("$REPLY.writeInt($RESULT.toInt())")
         }
     }
 
-    override fun readResultsFromProxy(methodType: ExecutableElement, methodBuilder: FunSpec.Builder) {
-        val resultMirror = methodType.getReturnAsTypeMirror()
+    override fun readResultsFromProxy(methodType: KSFunctionDeclaration, methodBuilder: FunSpec.Builder) {
+        val resultKSType = methodType.getReturnAsKSType()
         val resultType = methodType.getReturnAsKotlinType()
-        if (resultMirror.kind == TypeKind.ARRAY) {
+        if (resultKSType.isArrayType()) {
             val suffix = if (resultType.isNullable) "" else "!!"
             methodBuilder.addStatement("$RESULT = $REPLY.createCharArray()$suffix")
         } else {
@@ -43,15 +42,15 @@ internal class CharParamBuilder(remoterInterfaceElement: Element, bindingManager
         }
     }
 
-    override fun readOutResultsFromStub(param: VariableElement, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
-        if (param.asType().kind == TypeKind.ARRAY) {
+    override fun readOutResultsFromStub(param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
+        if (param.asType().isArrayType()) {
             methodBuilder.addStatement("$REPLY.writeCharArray($paramName)")
         }
     }
 
-    override fun writeParamsToStub(methodType: ExecutableElement, param: VariableElement, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
+    override fun writeParamsToStub(methodType: KSFunctionDeclaration, param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
         super.writeParamsToStub(methodType, param, paramType, paramName, methodBuilder)
-        if (param.asType().kind == TypeKind.ARRAY) {
+        if (param.asType().isArrayType()) {
             if (paramType == ParamType.OUT) {
                 writeOutParamsToStub(param, paramType, paramName, methodBuilder)
             } else {
@@ -63,14 +62,13 @@ internal class CharParamBuilder(remoterInterfaceElement: Element, bindingManager
         }
     }
 
-    override fun readOutParamsFromProxy(param: VariableElement, paramType: ParamType, methodBuilder: FunSpec.Builder) {
-        if (param.asType().kind == TypeKind.ARRAY && paramType != ParamType.IN) {
-            if (param.isNullable()){
+    override fun readOutParamsFromProxy(param: KSValueParameter, paramType: ParamType, methodBuilder: FunSpec.Builder) {
+        if (param.asType().isArrayType() && paramType != ParamType.IN) {
+            if (param.isNullable()) {
                 methodBuilder.beginControlFlow("if (${param.simpleName} != null)")
             }
-
             methodBuilder.addStatement("$REPLY.readCharArray(" + param.simpleName + ")")
-            if (param.isNullable()){
+            if (param.isNullable()) {
                 methodBuilder.endControlFlow()
             }
         }

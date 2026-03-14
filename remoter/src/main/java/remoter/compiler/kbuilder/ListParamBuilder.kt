@@ -1,19 +1,18 @@
 package remoter.compiler.kbuilder
 
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.FunSpec
-import javax.lang.model.element.Element
-import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.VariableElement
-import javax.lang.model.type.TypeKind
-import javax.lang.model.type.TypeMirror
 
 
 /**
  * A [ParamBuilder] for List type parameters
  */
-internal class ListParamBuilder(remoterInterfaceElement: Element, bindingManager: KBindingManager) : ParamBuilder(remoterInterfaceElement, bindingManager) {
-    override fun writeParamsToProxy(param: VariableElement, paramType: ParamType, methodBuilder: FunSpec.Builder) {
-        if (param.asType().kind == TypeKind.ARRAY) {
+internal class ListParamBuilder(remoterInterfaceElement: KSClassDeclaration, bindingManager: KBindingManager) : ParamBuilder(remoterInterfaceElement, bindingManager) {
+    override fun writeParamsToProxy(param: KSValueParameter, paramType: ParamType, methodBuilder: FunSpec.Builder) {
+        if (param.asType().isArrayType()) {
             logError("List[] is not supported")
         } else {
             if (paramType != ParamType.OUT) {
@@ -26,8 +25,8 @@ internal class ListParamBuilder(remoterInterfaceElement: Element, bindingManager
         }
     }
 
-    override fun readResultsFromStub(methodElement: ExecutableElement, resultType: TypeMirror, methodBuilder: FunSpec.Builder) {
-        if (resultType.kind == TypeKind.ARRAY) {
+    override fun readResultsFromStub(methodElement: KSFunctionDeclaration, resultType: KSType, methodBuilder: FunSpec.Builder) {
+        if (resultType.isArrayType()) {
             logError("List[] is not supported")
         } else {
             if (isListOfStrings(resultType)) {
@@ -38,7 +37,7 @@ internal class ListParamBuilder(remoterInterfaceElement: Element, bindingManager
         }
     }
 
-    override fun readOutResultsFromStub(param: VariableElement, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
+    override fun readOutResultsFromStub(param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
         if (isListOfStrings(param.asType())) {
             methodBuilder.addStatement("$REPLY.writeStringList($paramName)")
         } else {
@@ -46,13 +45,13 @@ internal class ListParamBuilder(remoterInterfaceElement: Element, bindingManager
         }
     }
 
-    override fun readResultsFromProxy(methodType: ExecutableElement, methodBuilder: FunSpec.Builder) {
+    override fun readResultsFromProxy(methodType: KSFunctionDeclaration, methodBuilder: FunSpec.Builder) {
         val resultType = methodType.getReturnAsKotlinType()
-        val resultMirror = methodType.getReturnAsTypeMirror()
-        if (resultMirror.kind == TypeKind.ARRAY) {
+        val resultKSType = methodType.getReturnAsKSType()
+        if (resultKSType.isArrayType()) {
             logError("List[] is not supported")
         } else {
-            if (isListOfStrings(resultMirror)) {
+            if (isListOfStrings(resultKSType)) {
                 methodBuilder.addStatement("$RESULT = $REPLY.createStringArrayList() as %T ", resultType)
             } else {
                 methodBuilder.addStatement("$RESULT = $REPLY.readArrayList(javaClass.getClassLoader()) as %T", resultType)
@@ -60,43 +59,44 @@ internal class ListParamBuilder(remoterInterfaceElement: Element, bindingManager
         }
     }
 
-    override fun writeParamsToStub(methodType: ExecutableElement, param: VariableElement, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
+    override fun writeParamsToStub(methodType: KSFunctionDeclaration, param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
         super.writeParamsToStub(methodType, param, paramType, paramName, methodBuilder)
-        if (param.asType().kind == TypeKind.ARRAY) {
+        if (param.asType().isArrayType()) {
             logError("List[] is not supported")
         } else {
             if (paramType == ParamType.OUT) {
                 methodBuilder.addStatement("$paramName = mutableListOf()")
             } else {
-                val suffix = if(param.isNullable()) "" else "!!"
+                val suffix = if (param.isNullable()) "" else "!!"
                 if (isListOfStrings(param.asType())) {
                     methodBuilder.addStatement("$paramName = $DATA.createStringArrayList()$suffix")
                 } else {
-                    methodBuilder.addStatement("$paramName = $DATA.readArrayList(getClass().getClassLoader())$suffix")
+                    methodBuilder.addStatement("$paramName = $DATA.readArrayList(javaClass.getClassLoader())$suffix")
                 }
             }
         }
     }
 
-    override fun readOutParamsFromProxy(param: VariableElement, paramType: ParamType, methodBuilder: FunSpec.Builder) {
+    override fun readOutParamsFromProxy(param: KSValueParameter, paramType: ParamType, methodBuilder: FunSpec.Builder) {
         if (paramType != ParamType.IN) {
-            if (param.isNullable()){
+            if (param.isNullable()) {
                 methodBuilder.beginControlFlow("if (${param.simpleName} != null)")
             }
-
             if (isListOfStrings(param.asType())) {
                 methodBuilder.addStatement("$REPLY.readStringList(" + param.simpleName + ")")
             } else {
-                methodBuilder.addStatement("$REPLY.readList(" + param.simpleName + ", getClass().getClassLoader())")
+                methodBuilder.addStatement("$REPLY.readList(" + param.simpleName + ", javaClass.getClassLoader())")
             }
-
-            if (param.isNullable()){
+            if (param.isNullable()) {
                 methodBuilder.endControlFlow()
             }
         }
     }
 
-    private fun isListOfStrings(typeMirror: TypeMirror): Boolean {
-        return typeMirror.toString() == "java.util.List<java.lang.String>"
+    private fun isListOfStrings(ksType: KSType): Boolean {
+        val decl = ksType.declaration
+        if (decl.qualifiedName?.asString() != "kotlin.collections.List") return false
+        val argType = ksType.arguments.firstOrNull()?.type?.resolve() ?: return false
+        return argType.declaration.qualifiedName?.asString() == "kotlin.String"
     }
 }

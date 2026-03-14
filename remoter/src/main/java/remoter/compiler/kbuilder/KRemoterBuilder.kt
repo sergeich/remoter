@@ -1,81 +1,88 @@
 package remoter.compiler.kbuilder
 
-import com.google.auto.common.MoreElements.getPackage
+import com.google.devtools.ksp.getDeclaredFunctions
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.symbol.ClassKind
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.TypeSpec
-import javax.annotation.processing.Messager
-import javax.lang.model.element.Element
-import javax.lang.model.element.ElementKind
-import javax.lang.model.element.TypeElement
-import javax.lang.model.type.DeclaredType
-import javax.tools.Diagnostic
 
 /**
- * Base class of all the builders
+ * Base class for all KSP-based Remoter code generators.
  */
-open class KRemoterBuilder(val remoterInterfaceElement: Element, val bindingManager: KBindingManager) {
+open class KRemoterBuilder(
+    val remoterInterfaceElement: KSClassDeclaration,
+    val bindingManager: KBindingManager
+) {
+    val remoterInterfacePackageName: String =
+        remoterInterfaceElement.packageName.asString()
+    val remoterInterfaceClassName: String =
+        remoterInterfaceElement.simpleName.asString()
 
-    val remoterInterfacePackageName: String = getPackage(remoterInterfaceElement).qualifiedName.toString()
-    val remoterInterfaceClassName: String = remoterInterfaceElement.simpleName.toString()
-    private val messager: Messager = bindingManager.getMessager()
+    private val logger: KSPLogger = bindingManager.getMessager()
 
     /**
-     * Callback that visit each element to be processed
+     * Visitor called for each interface method during code generation.
      */
     interface ElementVisitor {
-        fun visitElement(classBuilder: TypeSpec.Builder, member: Element, methodIndex: Int, methodBuilder: FunSpec.Builder?)
+        fun visitElement(
+            classBuilder: TypeSpec.Builder,
+            member: KSFunctionDeclaration,
+            methodIndex: Int,
+            methodBuilder: FunSpec.Builder?
+        )
     }
 
-
-    /**
-     * Logs an error
-     */
     open fun logError(message: String?) {
-        messager.printMessage(Diagnostic.Kind.ERROR, message)
+        logger.error(message ?: "")
     }
 
-    /**
-     * Logs a warning
-     */
     open fun logWarning(message: String?) {
-        messager.printMessage(Diagnostic.Kind.WARNING, message)
+        logger.warn(message ?: "")
     }
 
-    /**
-     * Logs an info
-     */
     open fun logInfo(message: String?) {
-        messager.printMessage(Diagnostic.Kind.NOTE, message)
+        logger.info(message ?: "")
     }
 
-
-    /**
-     * Finds that elements that needs to be processed
-     */
-    protected open fun processRemoterElements(classBuilder: TypeSpec.Builder, elementVisitor: ElementVisitor, methodBuilder: FunSpec.Builder?) {
-        processRemoterElements(classBuilder, remoterInterfaceElement, 0, elementVisitor, methodBuilder)
+    protected open fun processRemoterElements(
+        classBuilder: TypeSpec.Builder,
+        elementVisitor: ElementVisitor,
+        methodBuilder: FunSpec.Builder?
+    ) {
+        processRemoterElements(
+            classBuilder,
+            remoterInterfaceElement,
+            0,
+            elementVisitor,
+            methodBuilder
+        )
     }
 
-    /**
-     * Recursevely Visit extended elements
-     */
-    internal open fun processRemoterElements(classBuilder: TypeSpec.Builder, element: Element, methodIndex: Int, elementVisitor: ElementVisitor, methodBuilder: FunSpec.Builder?): Int {
-        var methodIndex = methodIndex
-        if (element is TypeElement) {
-            for (typeMirror in element.interfaces) {
-                if (typeMirror is DeclaredType) {
-                    val superElement = typeMirror.asElement()
-                    methodIndex = processRemoterElements(classBuilder, superElement, methodIndex, elementVisitor, methodBuilder)
-                }
-            }
-            for (member in element.getEnclosedElements()) {
-                if (member.kind == ElementKind.METHOD) {
-                    elementVisitor.visitElement(classBuilder, member, methodIndex, methodBuilder)
-                    methodIndex++
-                }
+    internal open fun processRemoterElements(
+        classBuilder: TypeSpec.Builder,
+        element: KSClassDeclaration,
+        methodIndex: Int,
+        elementVisitor: ElementVisitor,
+        methodBuilder: FunSpec.Builder?
+    ): Int {
+        var index = methodIndex
+
+        for (superTypeRef in element.superTypes) {
+            val superDecl = superTypeRef.resolve().declaration
+            if (superDecl is KSClassDeclaration && superDecl.classKind == ClassKind.INTERFACE) {
+                index = processRemoterElements(
+                    classBuilder, superDecl, index, elementVisitor, methodBuilder
+                )
             }
         }
-        return methodIndex
-    }
 
+        for (member in element.getDeclaredFunctions()) {
+            elementVisitor.visitElement(classBuilder, member, index, methodBuilder)
+            index++
+        }
+
+        return index
+    }
 }

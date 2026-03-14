@@ -1,53 +1,26 @@
-
-
 buildscript {
-    ext.kotlin_version = '1.8.21'
     ext.versions = [
             'minSdk'    : 9,
             'compileSdk': 28,
-            'release'   : '${VERSION_NAME}',
-            'androidPlugin': '7.0.0',
-            'supportLibrary': '26.0.1'
-    ]
-
-    ext.deps = [
-            android: [
-                    'runtime': 'com.google.android:android:4.1.1.4',
-                    'gradlePlugin': "com.android.tools.build:gradle:${versions.androidPlugin}",
-            ],
-            'support': [
-                    'compat': "com.android.support:support-compat:${versions.supportLibrary}",
-                    'annotations': "com.android.support:support-annotations:${versions.supportLibrary}",
-                    'test': [
-                            'runner': 'com.android.support.test:runner:1.0.0',
-                            'rules': 'com.android.support.test:rules:0.4.1'
-                    ],
-            ],
-            javapoet: 'com.squareup:javapoet:1.13.0',
-            junit: 'junit:junit:4.12',
-            'auto': [
-                    'service': 'com.google.auto.service:auto-service:1.0-rc6',
-                    'common': 'com.google.auto:auto-common:0.8',
-            ]
+            'release'   : '${VERSION_NAME}'
     ]
 
     repositories {
         mavenCentral()
         google()
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
+        gradlePluginPortal()
     }
     dependencies {
-        classpath deps.android.gradlePlugin
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath libs.android.gradle.plugin
+        classpath libs.kotlin.gradle.plugin
+        classpath libs.ksp.gradle.plugin
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
 }
 
 plugins {
-    id("org.jetbrains.dokka") version "1.8.10"
+    id("org.jetbrains.dokka") version "2.1.0"
 }
 
 subprojects { project ->
@@ -55,15 +28,8 @@ subprojects { project ->
     version = VERSION_NAME
 
     repositories {
-        jcenter()
         google()
         mavenCentral()
-        maven {
-            url "https://plugins.gradle.org/m2/"
-        }
+        gradlePluginPortal()
     }
-}
-
-task clean(type: Delete) {
-    delete rootProject.buildDir
 }

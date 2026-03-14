@@ -6,14 +6,8 @@ plugins {
     id 'signing'
 }
 
-sourceCompatibility = JavaVersion.VERSION_1_7
-targetCompatibility = JavaVersion.VERSION_1_7
-
-
 dependencies {
 }
-
-
 
 version = VERSION_NAME
 group = GROUP
@@ -21,6 +15,9 @@ group = GROUP
 java {
     withJavadocJar()
     withSourcesJar()
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
 }
 
 

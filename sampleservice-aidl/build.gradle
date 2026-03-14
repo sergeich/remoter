@@ -1,12 +1,14 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 android {
-    compileSdkVersion 26
+    namespace "util.remoter.aidlservice"
+    compileSdkVersion 34
 
     defaultConfig {
         applicationId "util.remoter.aidlservice"
         minSdkVersion 9
-        targetSdkVersion 26
+        targetSdkVersion 34
         versionCode 1
         versionName "1.0"
 
@@ -19,13 +21,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
-    }
 }
 
 dependencies {
-    androidTestImplementation deps.junit
-    androidTestImplementation deps.support.test.rules
+    androidTestImplementation libs.junit
+    androidTestImplementation libs.android.test.rules
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }

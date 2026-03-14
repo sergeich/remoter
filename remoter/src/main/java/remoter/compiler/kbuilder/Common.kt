@@ -1,188 +1,130 @@
 package remoter.compiler.kbuilder
 
-import com.squareup.kotlinpoet.ClassName
-import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import com.squareup.kotlinpoet.STAR
+import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.getDeclaredFunctions
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.TypeName
-import com.squareup.kotlinpoet.asTypeName
+import com.squareup.kotlinpoet.ksp.TypeParameterResolver
+import com.squareup.kotlinpoet.ksp.toTypeName
 import remoter.annotations.NullableType
-import javax.lang.model.element.Element
-import javax.lang.model.element.ElementKind
-import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.TypeElement
-import javax.lang.model.type.*
+
+// ─── KSType helpers ──────────────────────────────────────────────────────────
+
+/** Convert a KSP type to a KotlinPoet TypeName. */
+internal fun KSType.asKotlinType(): TypeName = toTypeName(TypeParameterResolver.EMPTY)
 
 /**
- * Returns whether this element is nullable
+ * Returns true if this type is any array type:
+ * kotlin.Array<T>, or a primitive array (IntArray, BooleanArray, …).
  */
-internal fun Element.isNullable(builder: KRemoterBuilder? = null): Boolean {
-    return (this.getAnnotation(org.jetbrains.annotations.Nullable::class.java) != null)
+fun KSType.isArrayType(): Boolean {
+    val qn = declaration.qualifiedName?.asString() ?: return false
+    return qn == "kotlin.Array" ||
+            qn == "kotlin.IntArray" ||
+            qn == "kotlin.BooleanArray" ||
+            qn == "kotlin.ByteArray" ||
+            qn == "kotlin.CharArray" ||
+            qn == "kotlin.DoubleArray" ||
+            qn == "kotlin.FloatArray" ||
+            qn == "kotlin.LongArray" ||
+            qn == "kotlin.ShortArray"
 }
-
-internal fun TypeMirror.isNullable(builder: KRemoterBuilder? = null): Boolean {
-    return (this.getAnnotation(org.jetbrains.annotations.Nullable::class.java) != null)
-}
-
-internal fun Element.isNullableType(typeIndex: Int, builder: KRemoterBuilder? = null): Boolean {
-    return this.getAnnotation(NullableType::class.java)?.nullableIndexes?.contains(typeIndex) == true
-}
-
 
 /**
- * Checks whether this element has any suspend function methods in it
+ * Returns the element type of an object array (kotlin.Array<T>).
+ * Only call this after confirming isArrayType() == true and
+ * the type is NOT a primitive array.
  */
-fun Element.hasSuspendFunction(): Boolean {
-    var suspendFound = false
-    if (this is TypeElement) {
-        for (typeMirror in interfaces) {
-            if (typeMirror is DeclaredType) {
-                if (!suspendFound) {
-                    val superElement = typeMirror.asElement()
-                    suspendFound = superElement.hasSuspendFunction()
-                } else {
-                    break
-                }
-            }
-        }
-        if (!suspendFound) {
-            for (member in this.getEnclosedElements()) {
-                if (!suspendFound) {
-                    if (member.kind == ElementKind.METHOD) {
-                        val executableElement = member as ExecutableElement
-                        suspendFound = executableElement.isSuspendFunction()
-                    }
-                } else {
-                    break
-                }
-            }
-        }
+fun KSType.componentType(): KSType = arguments.first().type!!.resolve()
+
+/** True when this type represents kotlin.Unit (void equivalent). */
+fun KSType.isVoidType(): Boolean =
+    declaration.qualifiedName?.asString() == "kotlin.Unit"
+
+// ─── KSValueParameter helpers ─────────────────────────────────────────────
+
+/** Convenience: resolve the declared type of this parameter. */
+internal fun KSValueParameter.asType(): KSType = type.resolve()
+
+/** Parameter name as a plain String. */
+internal val KSValueParameter.simpleName: String get() = name!!.asString()
+
+/** True when the parameter type is marked nullable (has `?`). */
+internal fun KSValueParameter.isNullable(): Boolean = type.resolve().isMarkedNullable
+
+/** The KotlinPoet TypeName for this parameter, respecting nullability. */
+internal fun KSValueParameter.asKotlinType(): TypeName = type.resolve().asKotlinType()
+
+/** True when the NullableType annotation specifies that typeIndex is nullable. */
+internal fun KSValueParameter.isNullableType(typeIndex: Int): Boolean =
+    annotations.any {
+        it.shortName.asString() == "NullableType" &&
+                (it.arguments.firstOrNull()?.value as? List<*>)?.contains(typeIndex) == true
     }
-    return suspendFound
+
+// ─── KSFunctionDeclaration helpers ───────────────────────────────────────
+
+/** True when the function is declared `suspend`. */
+internal fun KSFunctionDeclaration.isSuspendFunction() =
+    modifiers.contains(Modifier.SUSPEND)
+
+/**
+ * True when the suspend function's return is annotated @NullableType,
+ * meaning the caller must treat it as nullable.
+ */
+@OptIn(KspExperimental::class)
+internal fun KSFunctionDeclaration.isSuspendReturningNullable() =
+    getAnnotationsByType(NullableType::class).firstOrNull() != null
+
+/**
+ * For a suspend function, returns the actual Kotlin return type
+ * (KSP reports it directly; there is no synthetic Continuation parameter).
+ */
+internal fun KSFunctionDeclaration.getReturnTypeOfSuspend(): KSType =
+    returnType!!.resolve()
+
+/** Returns the resolved return type (works for both suspend and non-suspend). */
+internal fun KSFunctionDeclaration.getReturnAsKSType(): KSType =
+    returnType!!.resolve()
+
+/** Returns the KotlinPoet TypeName for the return type. */
+internal fun KSFunctionDeclaration.getReturnAsKotlinType(): TypeName {
+    return if (isSuspendFunction()) {
+        returnType!!.resolve().asKotlinType().copy(isSuspendReturningNullable())
+    } else {
+        returnType!!.resolve().asKotlinType()
+    }
 }
 
+/** True when the function's return type is marked nullable. */
+internal fun KSFunctionDeclaration.isNullable(): Boolean =
+    returnType?.resolve()?.isMarkedNullable == true
 
-internal fun Element.asKotlinType(builder: KRemoterBuilder? = null, isMutable: Boolean = false) = asType().asKotlinType(builder, this, isMutable).copy(isNullable(builder))
+// ─── KSClassDeclaration helpers ──────────────────────────────────────────
 
+/** The KotlinPoet TypeName for the star-projected form of this class. */
+internal fun KSClassDeclaration.asKotlinType(): TypeName =
+    asStarProjectedType().asKotlinType()
+
+/**
+ * Checks whether this interface (or any interface it extends) has at least
+ * one suspend function — used to decide which builder path to use.
+ */
+fun KSClassDeclaration.hasSuspendFunction(): Boolean {
+    if (superTypes.any {
+            val superDecl = it.resolve().declaration
+            superDecl is KSClassDeclaration && superDecl.hasSuspendFunction()
+        }) return true
+    return getDeclaredFunctions().any { it.isSuspendFunction() }
+}
+
+// kept for backward compatibility with usages via the old Common.kt API
 internal fun getNameForClassNameSearch(name: String): String {
     val result = name.split(' ').last()
     return javaToKotlinMap[result] ?: result
-}
-
-internal fun ExecutableElement.getReturnAsKotlinType(builder: KRemoterBuilder? = null): TypeName {
-    return if (isSuspendFunction()) {
-        getReturnTypeOfSuspend().asKotlinType(builder, this).copy(this.isSuspendReturningNullable())
-    } else {
-        returnType.asKotlinType(builder, this).copy(isNullable())
-    }
-}
-
-internal fun ExecutableElement.getReturnAsTypeMirror(builder: KRemoterBuilder? = null): TypeMirror {
-    return if (isSuspendFunction()) {
-        getReturnTypeOfSuspend()
-    } else {
-        returnType
-    }
-}
-
-internal fun TypeMirror.asKotlinType(builder: KRemoterBuilder? = null, sourceElement: Element? = null, isMutable: Boolean = false): TypeName {
-    val name = asTypeName()
-    val isNullable = getAnnotation(org.jetbrains.annotations.Nullable::class.java) != null
-    val result = when (kind) {
-        TypeKind.ARRAY -> {
-            val aKind = this as ArrayType
-            val arrayComponentType = aKind.componentType
-            when (arrayComponentType.kind) {
-                TypeKind.BOOLEAN -> BooleanArray::class.asTypeName()
-                TypeKind.BYTE -> ByteArray::class.asTypeName()
-                TypeKind.CHAR -> CharArray::class.asTypeName()
-                TypeKind.DOUBLE -> DoubleArray::class.asTypeName()
-                TypeKind.FLOAT -> FloatArray::class.asTypeName()
-                TypeKind.INT -> IntArray::class.asTypeName()
-                TypeKind.LONG -> LongArray::class.asTypeName()
-                TypeKind.SHORT -> ShortArray::class.asTypeName()
-                else -> {
-                    val typeIsNullable = sourceElement?.isNullableType(0) == true
-                    ClassName.bestGuess("kotlin.Array").parameterizedBy(arrayComponentType.asKotlinType(builder, sourceElement).copy(typeIsNullable))
-                }
-            }
-        }
-        TypeKind.WILDCARD -> {
-            val wType = this as WildcardType
-            if (name == STAR) {
-                STAR
-            } else {
-                val mappedName = javaToKotlinMap[wType.toString().split(' ').last()]
-                if (mappedName != null) {
-                    ClassName.bestGuess(getNameForClassNameSearch(mappedName))
-                } else {
-                    val nameString = name.toString()
-                    if (nameString.contains(' ') || nameString.contains('<')) {
-                        val mainType = ClassName.bestGuess(getNameForClassNameSearch(nameString.split('<').first()))
-                        var result: TypeName = mainType
-                        if (nameString.contains('<')) {
-                            val typeString = nameString.substring(nameString.indexOf('<') + 1, nameString.indexOf('>'))
-                            result = mainType.parameterizedBy(typeString.split(',').map { ClassName.bestGuess(getNameForClassNameSearch(it)).copy(true) })
-                        }
-                        result
-                    } else {
-                        name
-                    }
-
-                }
-            }
-        }
-        TypeKind.BOOLEAN -> Boolean::class.asTypeName()
-        TypeKind.BYTE -> Byte::class.asTypeName()
-        TypeKind.CHAR -> Char::class.asTypeName()
-        TypeKind.DOUBLE -> Double::class.asTypeName()
-        TypeKind.FLOAT -> Float::class.asTypeName()
-        TypeKind.INT -> Int::class.asTypeName()
-        TypeKind.LONG -> Long::class.asTypeName()
-        TypeKind.SHORT -> Short::class.asTypeName()
-        TypeKind.DECLARED -> {
-            val declaredType = this as DeclaredType
-            val elementType = declaredType.asElement()
-            val mappedName = javaToKotlinMap[elementType.toString()]
-            val declaredClassName = if (mappedName != null) {
-                ClassName.bestGuess(getNameForClassNameSearch(mappedName))
-            } else {
-                ClassName.bestGuess(elementType.toString())
-            }
-
-            var result: TypeName = declaredClassName
-
-            if (declaredType.typeArguments.isNotEmpty()) {
-                var typeIndex = 0
-
-                result = declaredClassName.parameterizedBy(declaredType.typeArguments.map {
-                    val typeArgTypeMirror = it.asKotlinType()
-                    val typeIsNullable = sourceElement?.isNullableType(typeIndex) == true
-                    typeIndex++
-                    if (typeArgTypeMirror != STAR) {
-                        ClassName.bestGuess(getNameForClassNameSearch(it.asKotlinType().toString())).copy(typeIsNullable || it.isNullable())
-                    } else {
-                        typeArgTypeMirror
-                    }
-
-                })
-            }
-            result
-        }
-        else -> {
-            name
-        }
-    }
-
-    return result.copy(isNullable)
-}
-
-fun ExecutableElement.isSuspendFunction() = parameters.isNotEmpty()
-        && parameters.last().asType().toString().contains("kotlin.coroutines.Continuation")
-
-fun ExecutableElement.isSuspendReturningNullable() = getAnnotation(NullableType::class.java) != null
-
-
-fun ExecutableElement.getReturnTypeOfSuspend(): TypeMirror {
-    val contiuatinDeclaredType = parameters.last().asType() as DeclaredType
-    return (contiuatinDeclaredType.typeArguments.first() as WildcardType).superBound
 }

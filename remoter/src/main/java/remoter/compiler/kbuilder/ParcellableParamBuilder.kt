@@ -1,20 +1,18 @@
 package remoter.compiler.kbuilder
 
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.google.devtools.ksp.symbol.KSFunctionDeclaration
+import com.google.devtools.ksp.symbol.KSType
+import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.FunSpec
-import javax.lang.model.element.Element
-import javax.lang.model.element.ExecutableElement
-import javax.lang.model.element.VariableElement
-import javax.lang.model.type.ArrayType
-import javax.lang.model.type.TypeKind
-import javax.lang.model.type.TypeMirror
 
 
 /**
  * A [ParamBuilder] for Parcellable type parameters
  */
-internal class ParcellableParamBuilder(remoterInterfaceElement: Element, bindingManager: KBindingManager) : ParamBuilder(remoterInterfaceElement, bindingManager) {
-    override fun writeParamsToProxy(param: VariableElement, paramType: ParamType, methodBuilder: FunSpec.Builder) {
-        if (param.asType().kind == TypeKind.ARRAY) {
+internal class ParcellableParamBuilder(remoterInterfaceElement: KSClassDeclaration, bindingManager: KBindingManager) : ParamBuilder(remoterInterfaceElement, bindingManager) {
+    override fun writeParamsToProxy(param: KSValueParameter, paramType: ParamType, methodBuilder: FunSpec.Builder) {
+        if (param.asType().isArrayType()) {
             if (paramType == ParamType.OUT) {
                 writeArrayOutParamsToProxy(param, methodBuilder)
             } else {
@@ -25,21 +23,21 @@ internal class ParcellableParamBuilder(remoterInterfaceElement: Element, binding
                 if (param.isNullable()) {
                     methodBuilder.beginControlFlow("if (" + param.simpleName + " != null)")
                     methodBuilder.addStatement("$DATA.writeInt(1)")
-                    methodBuilder.addStatement(param.simpleName.toString() + ".writeToParcel($DATA, 0)")
+                    methodBuilder.addStatement(param.simpleName + ".writeToParcel($DATA, 0)")
                     methodBuilder.endControlFlow()
                     methodBuilder.beginControlFlow("else")
                     methodBuilder.addStatement("$DATA.writeInt(0)")
                     methodBuilder.endControlFlow()
                 } else {
                     methodBuilder.addStatement("$DATA.writeInt(1)")
-                    methodBuilder.addStatement(param.simpleName.toString() + ".writeToParcel($DATA, 0)")
+                    methodBuilder.addStatement(param.simpleName + ".writeToParcel($DATA, 0)")
                 }
             }
         }
     }
 
-    override fun readResultsFromStub(methodElement: ExecutableElement, resultType: TypeMirror, methodBuilder: FunSpec.Builder) {
-        if (resultType.kind == TypeKind.ARRAY) {
+    override fun readResultsFromStub(methodElement: KSFunctionDeclaration, resultType: KSType, methodBuilder: FunSpec.Builder) {
+        if (resultType.isArrayType()) {
             methodBuilder.addStatement("$REPLY.writeTypedArray($RESULT, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE)")
         } else {
             if (methodElement.isNullable()) {
@@ -57,8 +55,8 @@ internal class ParcellableParamBuilder(remoterInterfaceElement: Element, binding
         }
     }
 
-    override fun readOutResultsFromStub(param: VariableElement, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
-        if (param.asType().kind == TypeKind.ARRAY) {
+    override fun readOutResultsFromStub(param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
+        if (param.asType().isArrayType()) {
             methodBuilder.addStatement("$REPLY.writeTypedArray($paramName, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE)")
         } else {
             if (param.asKotlinType().isNullable) {
@@ -76,14 +74,14 @@ internal class ParcellableParamBuilder(remoterInterfaceElement: Element, binding
         }
     }
 
-    override fun readResultsFromProxy(methodType: ExecutableElement, methodBuilder: FunSpec.Builder) {
+    override fun readResultsFromProxy(methodType: KSFunctionDeclaration, methodBuilder: FunSpec.Builder) {
         val resultType = methodType.getReturnAsKotlinType()
-        val resultMirror = methodType.getReturnAsTypeMirror()
-        if (resultMirror.kind == TypeKind.ARRAY) {
-            methodBuilder.addStatement("$RESULT = $REPLY.createTypedArray(" + getParcelableClassName(resultMirror) + ".CREATOR) as %T", resultType)
+        val resultKSType = methodType.getReturnAsKSType()
+        if (resultKSType.isArrayType()) {
+            methodBuilder.addStatement("$RESULT = $REPLY.createTypedArray(" + getParcelableClassName(resultKSType) + ".CREATOR) as %T", resultType)
         } else {
             methodBuilder.beginControlFlow("if ($REPLY.readInt() != 0)")
-            methodBuilder.addStatement("$RESULT = (" + getParcelableClassName(resultMirror) + ".CREATOR.createFromParcel($REPLY) as %T)", resultType)
+            methodBuilder.addStatement("$RESULT = (" + getParcelableClassName(resultKSType) + ".CREATOR.createFromParcel($REPLY) as %T)", resultType)
             methodBuilder.endControlFlow()
             methodBuilder.beginControlFlow("else")
             if (resultType.isNullable) {
@@ -95,11 +93,11 @@ internal class ParcellableParamBuilder(remoterInterfaceElement: Element, binding
         }
     }
 
-    override fun writeParamsToStub(methodType: ExecutableElement, param: VariableElement, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
+    override fun writeParamsToStub(methodType: KSFunctionDeclaration, param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
         super.writeParamsToStub(methodType, param, paramType, paramName, methodBuilder)
-        if (param.asType().kind == TypeKind.ARRAY) {
+        if (param.asType().isArrayType()) {
             if (paramType == ParamType.OUT) {
-                _writeOutParamsToStub(methodType, param, paramType, paramName, methodBuilder)
+                _writeOutParamsToStub(param, paramType, paramName, methodBuilder)
             } else {
                 methodBuilder.addStatement(paramName + " =  $DATA.createTypedArray(" + getParcelableClassName(param.asType()) + ".CREATOR) as " + param.asKotlinType())
             }
@@ -121,7 +119,7 @@ internal class ParcellableParamBuilder(remoterInterfaceElement: Element, binding
         }
     }
 
-    private fun _writeOutParamsToStub(methodType: ExecutableElement, param: VariableElement, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
+    private fun _writeOutParamsToStub(param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
         if (paramType != ParamType.IN) {
             methodBuilder.addStatement("val " + paramName + "_length = $DATA.readInt()")
             methodBuilder.beginControlFlow("if (" + paramName + "_length < 0 )")
@@ -130,50 +128,43 @@ internal class ParcellableParamBuilder(remoterInterfaceElement: Element, binding
             } else {
                 methodBuilder.beginControlFlow(paramName + " = " + param.asKotlinType()
                         + "(0)")
-                methodBuilder.addStatement("%T()", (param.asType() as ArrayType).componentType.asKotlinType())
+                methodBuilder.addStatement("%T()", param.asType().componentType().asKotlinType())
                 methodBuilder.endControlFlow()
             }
             methodBuilder.endControlFlow()
             methodBuilder.beginControlFlow("else")
             methodBuilder.beginControlFlow(paramName + " = " + param.asKotlinType().copy(false)
                     + "(" + paramName + "_length)")
-            methodBuilder.addStatement("%T()", (param.asType() as ArrayType).componentType.asKotlinType(null, methodType))
+            methodBuilder.addStatement("%T()", param.asType().componentType().asKotlinType())
             methodBuilder.endControlFlow()
             methodBuilder.endControlFlow()
         }
     }
 
-    private fun getParcelableClassName(typeMirror: TypeMirror): String {
-        return if (typeMirror.kind != TypeKind.ARRAY) {
-            var pClassName = typeMirror.toString()
-            val genericStartIndex = pClassName.indexOf('<')
-            if (genericStartIndex != -1) {
-                pClassName = pClassName.substring(0, genericStartIndex).trim { it <= ' ' }
-            }
-            pClassName
+    private fun getParcelableClassName(ksType: KSType): String {
+        return if (!ksType.isArrayType()) {
+            ksType.declaration.qualifiedName?.asString() ?: ksType.toString()
         } else {
-            getParcelableClassName((typeMirror as ArrayType).componentType)
+            getParcelableClassName(ksType.componentType())
         }
     }
 
-    override fun readOutParamsFromProxy(param: VariableElement, paramType: ParamType, methodBuilder: FunSpec.Builder) {
+    override fun readOutParamsFromProxy(param: KSValueParameter, paramType: ParamType, methodBuilder: FunSpec.Builder) {
         if (paramType != ParamType.IN) {
-            if (param.asType().kind == TypeKind.ARRAY) {
-                if (param.isNullable()){
+            if (param.asType().isArrayType()) {
+                if (param.isNullable()) {
                     methodBuilder.beginControlFlow("if (${param.simpleName} != null)")
                 }
-
                 methodBuilder.addStatement("$REPLY.readTypedArray(" + param.simpleName + ", " + getParcelableClassName(param.asType()) + ".CREATOR)")
-
-                if (param.isNullable()){
+                if (param.isNullable()) {
                     methodBuilder.endControlFlow()
                 }
             } else {
                 methodBuilder.beginControlFlow("if ($REPLY.readInt() != 0)")
                 if (param.isNullable()) {
-                    methodBuilder.addStatement(param.simpleName.toString() + "?.readFromParcel($REPLY)")
+                    methodBuilder.addStatement(param.simpleName + "?.readFromParcel($REPLY)")
                 } else {
-                    methodBuilder.addStatement(param.simpleName.toString() + ".readFromParcel($REPLY)")
+                    methodBuilder.addStatement(param.simpleName + ".readFromParcel($REPLY)")
                 }
                 methodBuilder.endControlFlow()
             }
