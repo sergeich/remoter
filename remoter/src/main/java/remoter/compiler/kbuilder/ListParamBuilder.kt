@@ -67,11 +67,11 @@ internal class ListParamBuilder(remoterInterfaceElement: KSClassDeclaration, bin
             if (paramType == ParamType.OUT) {
                 methodBuilder.addStatement("$paramName = mutableListOf()")
             } else {
-                val suffix = if (param.isNullable()) "" else "!!"
                 if (isListOfStrings(param.asType())) {
+                    val suffix = if (param.isNullable()) "" else "!!"
                     methodBuilder.addStatement("$paramName = $DATA.createStringArrayList()$suffix")
                 } else {
-                    methodBuilder.addStatement("$paramName = $DATA.readArrayList(javaClass.getClassLoader())$suffix")
+                    methodBuilder.addStatement("$paramName = $DATA.readArrayList(javaClass.getClassLoader()) as %T", param.asKotlinType())
                 }
             }
         }
@@ -95,7 +95,8 @@ internal class ListParamBuilder(remoterInterfaceElement: KSClassDeclaration, bin
 
     private fun isListOfStrings(ksType: KSType): Boolean {
         val decl = ksType.declaration
-        if (decl.qualifiedName?.asString() != "kotlin.collections.List") return false
+        val qn = decl.qualifiedName?.asString()
+        if (qn != "kotlin.collections.List" && qn != "kotlin.collections.MutableList") return false
         val argType = ksType.arguments.firstOrNull()?.type?.resolve() ?: return false
         return argType.declaration.qualifiedName?.asString() == "kotlin.String"
     }

@@ -4,9 +4,6 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
-import kotlinx.coroutines.CompletableDeferred
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import java.util.*
 
 internal class KFieldBuilder(element: KSClassDeclaration, bindingManager: KBindingManager) :
@@ -28,11 +25,11 @@ internal class KFieldBuilder(element: KSClassDeclaration, bindingManager: KBindi
                     .mutable().initializer("null").build()
             )
             classBuilder.addProperty(
-                PropertySpec.builder("_proxyScope", CoroutineScope::class, KModifier.PRIVATE)
-                    .initializer("%M(%T.IO)", MemberName("kotlinx.coroutines", "CoroutineScope"), Dispatchers::class).build()
+                PropertySpec.builder("_proxyScope", ClassName.bestGuess("kotlinx.coroutines.CoroutineScope"), KModifier.PRIVATE)
+                    .initializer("%M(%T.IO)", MemberName("kotlinx.coroutines", "CoroutineScope"), ClassName.bestGuess("kotlinx.coroutines.Dispatchers")).build()
             )
             classBuilder.addProperty(
-                PropertySpec.builder("_serviceInitComplete", CompletableDeferred::class.parameterizedBy(Boolean::class), KModifier.PRIVATE)
+                PropertySpec.builder("_serviceInitComplete", ClassName.bestGuess("kotlinx.coroutines.CompletableDeferred").parameterizedBy(Boolean::class.asTypeName()), KModifier.PRIVATE)
                     .mutable().initializer("%M<Boolean>()", MemberName("kotlinx.coroutines", "CompletableDeferred")).build()
             )
         }

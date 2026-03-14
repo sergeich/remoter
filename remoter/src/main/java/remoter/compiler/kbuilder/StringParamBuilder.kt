@@ -12,7 +12,12 @@ import com.squareup.kotlinpoet.FunSpec
  */
 internal class StringParamBuilder(remoterInterfaceElement: KSClassDeclaration, bindingManager: KBindingManager) : ParamBuilder(remoterInterfaceElement, bindingManager) {
     override fun writeParamsToProxy(param: KSValueParameter, paramType: ParamType, methodBuilder: FunSpec.Builder) {
-        if (param.asType().isArrayType()) {
+        if (param.isVararg) {
+            methodBuilder.addStatement("$DATA.writeInt(${param.simpleName}.size)")
+            methodBuilder.beginControlFlow("for (___remoter_s in ${param.simpleName})")
+            methodBuilder.addStatement("$DATA.writeString(___remoter_s)")
+            methodBuilder.endControlFlow()
+        } else if (param.asType().isArrayType()) {
             if (paramType == ParamType.OUT) {
                 writeArrayOutParamsToProxy(param, methodBuilder)
             } else {
@@ -52,22 +57,27 @@ internal class StringParamBuilder(remoterInterfaceElement: KSClassDeclaration, b
     }
 
     override fun writeParamsToStub(methodType: KSFunctionDeclaration, param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
-        super.writeParamsToStub(methodType, param, paramType, paramName, methodBuilder)
-        if (param.asType().isArrayType()) {
-            if (paramType == ParamType.OUT) {
-                writeOutParamsToStub(param, paramType, paramName, methodBuilder)
+        if (param.isVararg) {
+            methodBuilder.addStatement("val ${paramName}_size = $DATA.readInt()")
+            methodBuilder.addStatement("var $paramName = Array(${paramName}_size) { $DATA.readString() }")
+        } else {
+            super.writeParamsToStub(methodType, param, paramType, paramName, methodBuilder)
+            if (param.asType().isArrayType()) {
+                if (paramType == ParamType.OUT) {
+                    writeOutParamsToStub(param, paramType, paramName, methodBuilder)
+                } else {
+                    if (param.isNullable()) {
+                        methodBuilder.addStatement("$paramName = $DATA.createStringArray()")
+                    } else {
+                        methodBuilder.addStatement("$paramName = $DATA.createStringArray()!!")
+                    }
+                }
             } else {
                 if (param.isNullable()) {
-                    methodBuilder.addStatement("$paramName = $DATA.createStringArray()")
+                    methodBuilder.addStatement("$paramName = $DATA.readString()")
                 } else {
-                    methodBuilder.addStatement("$paramName = $DATA.createStringArray()!!")
+                    methodBuilder.addStatement("$paramName = $DATA.readString()!!")
                 }
-            }
-        } else {
-            if (param.isNullable()) {
-                methodBuilder.addStatement("$paramName = $DATA.readString()")
-            } else {
-                methodBuilder.addStatement("$paramName = $DATA.readString()!!")
             }
         }
     }

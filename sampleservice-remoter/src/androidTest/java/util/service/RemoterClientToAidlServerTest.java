@@ -65,8 +65,7 @@ public class RemoterClientToAidlServerTest {
     public ActivityTestRule<TestActivity> mActivityRule = new ActivityTestRule<TestActivity>(TestActivity.class) {
         @Override
         protected Intent getActivityIntent() {
-            Intent intent = new Intent(INTENT_REMOTER_TEST_ACTIVITY);
-            return intent;
+            return new Intent(INTENT_REMOTER_TEST_ACTIVITY);
         }
     };
 
@@ -373,7 +372,7 @@ public class RemoterClientToAidlServerTest {
             }
         };
 
-        ISampleServiceListener_Stub.setStubProxyCheck(false);
+        ISampleServiceListener_Stub.Companion.setCheckStubProxyMatch(false);
 
         sampleService.testEcho(message, listener);
         Assert.assertEquals(1, callBack.size());

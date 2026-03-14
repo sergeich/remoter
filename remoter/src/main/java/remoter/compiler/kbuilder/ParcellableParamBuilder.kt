@@ -128,14 +128,14 @@ internal class ParcellableParamBuilder(remoterInterfaceElement: KSClassDeclarati
             } else {
                 methodBuilder.beginControlFlow(paramName + " = " + param.asKotlinType()
                         + "(0)")
-                methodBuilder.addStatement("%T()", param.asType().componentType().asKotlinType())
+                methodBuilder.addStatement("%T()", param.asType().componentType().asKotlinType().copy(false))
                 methodBuilder.endControlFlow()
             }
             methodBuilder.endControlFlow()
             methodBuilder.beginControlFlow("else")
             methodBuilder.beginControlFlow(paramName + " = " + param.asKotlinType().copy(false)
                     + "(" + paramName + "_length)")
-            methodBuilder.addStatement("%T()", param.asType().componentType().asKotlinType())
+            methodBuilder.addStatement("%T()", param.asType().componentType().asKotlinType().copy(false))
             methodBuilder.endControlFlow()
             methodBuilder.endControlFlow()
         }

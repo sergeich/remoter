@@ -14,7 +14,8 @@ import com.squareup.kotlinpoet.STAR
 import com.squareup.kotlinpoet.TypeSpec
 import com.squareup.kotlinpoet.asTypeName
 import com.squareup.kotlinpoet.jvm.throws
-import kotlinx.coroutines.Dispatchers
+import com.squareup.kotlinpoet.ksp.TypeParameterResolver
+import com.squareup.kotlinpoet.ksp.toTypeParameterResolver
 import remoter.RemoterGlobalProperties
 import remoter.RemoterProxyListener
 import remoter.RemoterStub
@@ -215,14 +216,18 @@ class KMethodBuilder(
         val isSuspendReturnNullable = if (isSuspendFunction) member.isSuspendReturningNullable() else false
         val isSuspendUnit = isSuspendFunction && member.getReturnTypeOfSuspend().isVoidType()
 
+        val typeParamResolver = (member.parentDeclaration as? KSClassDeclaration)
+            ?.typeParameters?.toTypeParameterResolver()
+            ?: TypeParameterResolver.EMPTY
+
         val methodBuilder = FunSpec.builder(methodName)
             .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
 
         if (isSuspendFunction) {
             methodBuilder.addModifiers(KModifier.SUSPEND)
-            methodBuilder.returns(member.getReturnTypeOfSuspend().asKotlinType().copy(isSuspendReturnNullable))
+            methodBuilder.returns(member.getReturnTypeOfSuspend().asKotlinType(typeParamResolver).copy(isSuspendReturnNullable))
         } else {
-            methodBuilder.returns(member.getReturnAsKotlinType())
+            methodBuilder.returns(member.getReturnAsKotlinType(typeParamResolver))
         }
 
         // @Throws annotation
@@ -245,20 +250,20 @@ class KMethodBuilder(
         for ((paramIndex, param) in member.parameters.withIndex()) {
             val isLastParam = paramIndex == paramsSize - 1
             if (isLastParam && param.isVararg) {
-                val componentType = param.asType().componentType()
+                val componentType = param.asType()
                 methodBuilder.addParameter(
-                    ParameterSpec.builder(param.simpleName, componentType.asKotlinType().copy(true))
+                    ParameterSpec.builder(param.simpleName, componentType.asKotlinType(typeParamResolver).copy(true))
                         .addModifiers(KModifier.VARARG).build()
                 )
             } else {
                 methodBuilder.addParameter(
-                    ParameterSpec.builder(param.simpleName, param.asKotlinType()).build()
+                    ParameterSpec.builder(param.simpleName, param.asKotlinType(typeParamResolver)).build()
                 )
             }
         }
 
         if (isSuspendFunction) {
-            methodBuilder.beginControlFlow("return kotlinx.coroutines.withContext(%T.IO)", Dispatchers::class)
+            methodBuilder.beginControlFlow("return kotlinx.coroutines.withContext(%T.IO)", ClassName.bestGuess("kotlinx.coroutines.Dispatchers"))
         }
 
         methodBuilder.addStatement("val ${ParamBuilder.DATA} = %T.obtain()", ClassName.bestGuess("android.os.Parcel"))
@@ -269,11 +274,11 @@ class KMethodBuilder(
         if (isSuspendFunction) {
             if (!isSuspendUnit) {
                 methodBuilder.addStatement("var ${ParamBuilder.RESULT}: %T",
-                    member.getReturnTypeOfSuspend().asKotlinType().copy(isSuspendReturnNullable))
+                    member.getReturnTypeOfSuspend().asKotlinType(typeParamResolver).copy(isSuspendReturnNullable))
             }
         } else {
             if (!member.getReturnAsKSType().isVoidType()) {
-                methodBuilder.addStatement("var ${ParamBuilder.RESULT}: %T", member.getReturnAsKotlinType())
+                methodBuilder.addStatement("var ${ParamBuilder.RESULT}: %T", member.getReturnAsKotlinType(typeParamResolver))
             }
         }
 
@@ -435,8 +440,10 @@ class KMethodBuilder(
         methodBuilder = FunSpec.builder("destroyProxy")
             .addModifiers(KModifier.PUBLIC, KModifier.OVERRIDE)
             .returns(Unit::class)
-            .addStatement("_proxyScope.%M()", MemberName("kotlinx.coroutines", "cancel"))
-            .addStatement("this.remoteBinder = null")
+        if (bindingManager.hasRemoterBuilder()) {
+            methodBuilder.addStatement("_proxyScope.%M()", MemberName("kotlinx.coroutines", "cancel"))
+        }
+        methodBuilder.addStatement("this.remoteBinder = null")
             .addStatement("unRegisterProxyListener(null)")
             .beginControlFlow("synchronized (stubMap)")
             .beginControlFlow("stubMap.values.forEach")
@@ -607,9 +614,6 @@ class KMethodBuilder(
         } else {
             methodBuilderNonSuspended
                 .addStatement("val result = remoteBinder")
-                .beginControlFlow("if (waitForInit)")
-                .addStatement("kotlinx.coroutines.runBlocking { _serviceInitComplete.await() }")
-                .endControlFlow()
                 .addStatement("return result?: throw %T(\"No remote binder or IServiceConnectot set\")", RuntimeException::class)
         }
         classBuilder.addFunction(methodBuilderNonSuspended.build())

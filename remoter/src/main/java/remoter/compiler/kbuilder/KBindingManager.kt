@@ -38,11 +38,8 @@ open class KBindingManager(
         null
     }
 
-    private val remoterBuilderClass: Class<*>? = try {
-        Class.forName("remoter.builder.ServiceConnector")
-    } catch (_: ClassNotFoundException) {
-        null
-    }
+    private val remoterBuilderAvailable: Boolean =
+        resolver.getClassDeclarationByName("remoter.builder.ServiceConnector") != null
 
     // ── File generation ───────────────────────────────────────────────────
 
@@ -60,7 +57,7 @@ open class KBindingManager(
 
     fun getMessager() = env.logger
 
-    fun hasRemoterBuilder() = remoterBuilderClass != null
+    fun hasRemoterBuilder() = remoterBuilderAvailable
 
     internal fun getFieldBuilder(classDecl: KSClassDeclaration) = KFieldBuilder(classDecl, this)
     fun getFunctionBuilder(classDecl: KSClassDeclaration) = KMethodBuilder(classDecl, this)

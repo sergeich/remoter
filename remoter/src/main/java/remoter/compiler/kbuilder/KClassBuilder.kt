@@ -4,6 +4,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.squareup.kotlinpoet.*
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
 import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.toTypeVariableName
 import remoter.RemoterProxy
 import remoter.RemoterProxyListener
 import remoter.RemoterStub
@@ -110,7 +111,7 @@ internal class KClassBuilder(
         }
 
         for (typeParam in remoterInterfaceElement.typeParameters) {
-            proxyBuilder.addTypeVariable(TypeVariableName(typeParam.name.asString()))
+            proxyBuilder.addTypeVariable(typeParam.toTypeVariableName())
         }
 
         proxyBuilder.addType(buildDeathRecipient())
@@ -131,7 +132,7 @@ internal class KClassBuilder(
             .superclass(ClassName("android.os", "Binder"))
 
         for (typeParam in remoterInterfaceElement.typeParameters) {
-            stubClassBuilder.addTypeVariable(TypeVariableName(typeParam.name.asString()))
+            stubClassBuilder.addTypeVariable(typeParam.toTypeVariableName())
         }
 
         stubClassBuilder.addType(getBinderWrapper())

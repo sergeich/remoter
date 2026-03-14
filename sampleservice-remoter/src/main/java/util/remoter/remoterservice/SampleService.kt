@@ -17,7 +17,7 @@ class SampleService : Service() {
     private val serviceImpl: ISampleService = SampleServiceImpl()
     private val receiver: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context?, intent: Intent) {
-            ISampleService_Stub.setStubProxyCheck(intent.getBooleanExtra("enable", true))
+            ISampleService_Stub.checkStubProxyMatch = intent.getBooleanExtra("enable", true)
         }
     }
 

@@ -11,12 +11,13 @@ import com.google.devtools.ksp.symbol.Modifier
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.ksp.TypeParameterResolver
 import com.squareup.kotlinpoet.ksp.toTypeName
+import com.squareup.kotlinpoet.ksp.toTypeParameterResolver
 import remoter.annotations.NullableType
 
 // ─── KSType helpers ──────────────────────────────────────────────────────────
 
 /** Convert a KSP type to a KotlinPoet TypeName. */
-internal fun KSType.asKotlinType(): TypeName = toTypeName(TypeParameterResolver.EMPTY)
+internal fun KSType.asKotlinType(resolver: TypeParameterResolver = TypeParameterResolver.EMPTY): TypeName = toTypeName(resolver)
 
 /**
  * Returns true if this type is any array type:
@@ -58,7 +59,12 @@ internal val KSValueParameter.simpleName: String get() = name!!.asString()
 internal fun KSValueParameter.isNullable(): Boolean = type.resolve().isMarkedNullable
 
 /** The KotlinPoet TypeName for this parameter, respecting nullability. */
-internal fun KSValueParameter.asKotlinType(): TypeName = type.resolve().asKotlinType()
+internal fun KSValueParameter.asKotlinType(resolver: TypeParameterResolver = paramDeclaringClassTypeParamResolver()): TypeName = type.resolve().asKotlinType(resolver)
+
+private fun KSValueParameter.paramDeclaringClassTypeParamResolver(): TypeParameterResolver =
+    ((parent as? KSFunctionDeclaration)?.parentDeclaration as? KSClassDeclaration)
+        ?.typeParameters?.toTypeParameterResolver()
+        ?: TypeParameterResolver.EMPTY
 
 /** True when the NullableType annotation specifies that typeIndex is nullable. */
 internal fun KSValueParameter.isNullableType(typeIndex: Int): Boolean =
@@ -93,13 +99,17 @@ internal fun KSFunctionDeclaration.getReturnAsKSType(): KSType =
     returnType!!.resolve()
 
 /** Returns the KotlinPoet TypeName for the return type. */
-internal fun KSFunctionDeclaration.getReturnAsKotlinType(): TypeName {
+internal fun KSFunctionDeclaration.getReturnAsKotlinType(resolver: TypeParameterResolver = declaringClassTypeParamResolver()): TypeName {
     return if (isSuspendFunction()) {
-        returnType!!.resolve().asKotlinType().copy(isSuspendReturningNullable())
+        returnType!!.resolve().asKotlinType(resolver).copy(isSuspendReturningNullable())
     } else {
-        returnType!!.resolve().asKotlinType()
+        returnType!!.resolve().asKotlinType(resolver)
     }
 }
+
+private fun KSFunctionDeclaration.declaringClassTypeParamResolver(): TypeParameterResolver =
+    (parentDeclaration as? KSClassDeclaration)?.typeParameters?.toTypeParameterResolver()
+        ?: TypeParameterResolver.EMPTY
 
 /** True when the function's return type is marked nullable. */
 internal fun KSFunctionDeclaration.isNullable(): Boolean =

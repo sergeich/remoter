@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'com.google.devtools.ksp'
 
 android {
     namespace "util.remoter.remoterservice"
@@ -41,5 +42,5 @@ dependencies {
 
 //During development
     api project(path: ':remoter-annotations')
-    annotationProcessor project(path: ':remoter')
+    ksp project(path: ':remoter')
 }
