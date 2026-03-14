@@ -193,7 +193,7 @@ class KotlinNonSuspendServiceImpl2 : ISampleNonSuspendKotlinService2 {
         return inMap
     }
 
-    override fun testMap3(inMap: MutableMap<String?, Int>?, outMap: MutableMap<String, Int>?, inOutMap: MutableMap<String, Int>?): MutableMap<String, Int?>? {
+    override fun testMap3(inMap: MutableMap<String?, Int>?, outMap: MutableMap<String, Int>?, inOutMap: MutableMap<String, Int>?): MutableMap<String, Int?> {
         return mutableMapOf()
     }
 
@@ -319,11 +319,11 @@ class KotlinNonSuspendServiceImpl2 : ISampleNonSuspendKotlinService2 {
     }
 
     override fun getTemplateRemoter1(): ITest<String, CustomData, CustomData> {
-        return ITest { param1, param2 -> CustomData().also { it.data = "input $param1" } }
+        return ITest { param1, _ -> CustomData().also { it.data = "input $param1" } }
     }
 
-    override fun getTemplateRemoter2(): ITest<String?, CustomData, CustomData?>? {
-        return ITest { param1, param2 -> CustomData().also { it.data = "input $param1" } }
+    override fun getTemplateRemoter2(): ITest<String?, CustomData, CustomData?> {
+        return ITest { param1, _ -> CustomData().also { it.data = "input $param1" } }
     }
 
     private val listeners = mutableListOf<ISampleKotlinServiceListener>()

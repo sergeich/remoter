@@ -43,7 +43,7 @@ class SampleActivityShowingRemoterKotlin : Activity() {
             Log.v(TAG, "simulateCrash")
             GlobalScope.launch {
                 try {
-                    val time = timeService.simulateServiceCrash()
+                    timeService.simulateServiceCrash()
                 } catch (exception: Exception) {
                     Log.w(TAG, "Expected Exception ", exception)
                     findViewById<TextView>(R.id.resultView).text =

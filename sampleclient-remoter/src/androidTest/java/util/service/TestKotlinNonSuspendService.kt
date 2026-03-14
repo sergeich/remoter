@@ -271,9 +271,9 @@ class TestKotlinNonSuspendService2 {
         result = service.testParcelableArray2(input, output, inputOutput)
 
         Assert.assertEquals(input[0]?.intValue, result!![0]?.intValue)
-        Assert.assertEquals(input[0]?.stringValue, result!![0]?.stringValue)
-        Assert.assertEquals(input[0]?.intValue, inputOutput!![0]?.intValue)
-        Assert.assertEquals(input[0]?.stringValue, inputOutput!![0]?.stringValue)
+        Assert.assertEquals(input[0]?.stringValue, result[0]?.stringValue)
+        Assert.assertEquals(input[0]?.intValue, inputOutput[0]?.intValue)
+        Assert.assertEquals(input[0]?.stringValue, inputOutput[0]?.stringValue)
 
 
     }
@@ -297,9 +297,9 @@ class TestKotlinNonSuspendService2 {
         result = service.testSimpleParcelableArray2(input, output, inputOutput)
 
         Assert.assertEquals(input[0]?.intValue, result!![0]?.intValue)
-        Assert.assertEquals(input[0]?.stringValue, result!![0]?.stringValue)
-        Assert.assertEquals(input[0]?.intValue, inputOutput!![0]?.intValue)
-        Assert.assertEquals(input[0]?.stringValue, inputOutput!![0]?.stringValue)
+        Assert.assertEquals(input[0]?.stringValue, result[0]?.stringValue)
+        Assert.assertEquals(input[0]?.intValue, inputOutput[0]?.intValue)
+        Assert.assertEquals(input[0]?.stringValue, inputOutput[0]?.stringValue)
 
 
     }
@@ -346,9 +346,9 @@ class TestKotlinNonSuspendService2 {
         result = service.testParcelArray2(input, output, inputOutput)
 
         Assert.assertEquals(input[0]?.intData, result!![0]?.intData)
-        Assert.assertEquals(input[0]?.data, result!![0]?.data)
-        Assert.assertEquals(input[0]?.intData, inputOutput!![0]?.intData)
-        Assert.assertEquals(input[0]?.data, inputOutput!![0]?.data)
+        Assert.assertEquals(input[0]?.data, result[0]?.data)
+        Assert.assertEquals(input[0]?.intData, inputOutput[0]?.intData)
+        Assert.assertEquals(input[0]?.data, inputOutput[0]?.data)
 
 
     }
@@ -371,9 +371,9 @@ class TestKotlinNonSuspendService2 {
 
         result = service.testParcelList2(input, output, inputOutput)
         Assert.assertEquals(input[0]?.data, result!![0]?.data)
-        Assert.assertEquals(input[0]?.intData, result!![0]?.intData)
-        Assert.assertEquals(input[0]?.data, inputOutput!![0]?.data)
-        Assert.assertEquals(input[0]?.intData, inputOutput!![0]?.intData)
+        Assert.assertEquals(input[0]?.intData, result[0]?.intData)
+        Assert.assertEquals(input[0]?.data, inputOutput[0]?.data)
+        Assert.assertEquals(input[0]?.intData, inputOutput[0]?.intData)
 
     }
 

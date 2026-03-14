@@ -185,7 +185,7 @@ class KotlinNonSuspendServiceImpl : ISampleNonSuspendKotlinService {
     override fun testMap2(inMap: MutableMap<String?, Int?>?, outMap: MutableMap<String?, Int?>?, inOutMap: MutableMap<String?, Int?>?): MutableMap<String?, Int?>? {
         if (inOutMap != null) {
             inOutMap.clear()
-            inMap?.forEach { t, u ->
+            inMap?.forEach { (t, u) ->
                 inOutMap[t] = u
             }
             Log.v(TAG, "testMap2 inout $inOutMap")
@@ -193,7 +193,7 @@ class KotlinNonSuspendServiceImpl : ISampleNonSuspendKotlinService {
         return inMap
     }
 
-    override fun testMap3(inMap: MutableMap<String?, Int>?, outMap: MutableMap<String, Int>?, inOutMap: MutableMap<String, Int>?): MutableMap<String, Int?>? {
+    override fun testMap3(inMap: MutableMap<String?, Int>?, outMap: MutableMap<String, Int>?, inOutMap: MutableMap<String, Int>?): MutableMap<String, Int?> {
         return mutableMapOf()
     }
 
@@ -319,11 +319,11 @@ class KotlinNonSuspendServiceImpl : ISampleNonSuspendKotlinService {
     }
 
     override fun getTemplateRemoter1(): ITest<String, CustomData, CustomData> {
-        return ITest { param1, param2 -> CustomData().also { it.data = "input $param1" } }
+        return ITest { param1, _ -> CustomData().also { it.data = "input $param1" } }
     }
 
-    override fun getTemplateRemoter2(): ITest<String?, CustomData, CustomData?>? {
-        return ITest { param1, param2 -> CustomData().also { it.data = "input $param1" } }
+    override fun getTemplateRemoter2(): ITest<String?, CustomData, CustomData?> {
+        return ITest { param1, _ -> CustomData().also { it.data = "input $param1" } }
     }
 
     private val listeners = mutableListOf<ISampleKotlinServiceListener>()

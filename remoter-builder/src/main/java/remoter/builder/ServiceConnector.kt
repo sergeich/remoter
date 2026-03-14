@@ -145,7 +145,7 @@ class ServiceConnector private constructor(
             val explicitIntent = Intent(implicitIntent)
             val pm = context.packageManager
             val resolveInfo = pm.queryIntentServices(implicitIntent, 0)
-            if (resolveInfo != null && resolveInfo.size >= 1) {
+            if (resolveInfo.isNotEmpty()) {
                 val serviceInfo = resolveInfo[0]
                 val packageName = serviceInfo.serviceInfo.packageName
                 val className = serviceInfo.serviceInfo.name

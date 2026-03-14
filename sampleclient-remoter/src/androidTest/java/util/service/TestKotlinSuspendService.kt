@@ -407,9 +407,9 @@ class TestKotlinSuspendService {
             result = service.testParcelableArray2(input, output, inputOutput)
 
             Assert.assertEquals(input[0]?.intValue, result!![0]?.intValue)
-            Assert.assertEquals(input[0]?.stringValue, result!![0]?.stringValue)
-            Assert.assertEquals(input[0]?.intValue, inputOutput!![0]?.intValue)
-            Assert.assertEquals(input[0]?.stringValue, inputOutput!![0]?.stringValue)
+            Assert.assertEquals(input[0]?.stringValue, result[0]?.stringValue)
+            Assert.assertEquals(input[0]?.intValue, inputOutput[0]?.intValue)
+            Assert.assertEquals(input[0]?.stringValue, inputOutput[0]?.stringValue)
 
 
             val input2 = arrayOf(FooParcelable<String>("100", 100))
@@ -444,9 +444,9 @@ class TestKotlinSuspendService {
             result = service.testSimpleParcelableArray2(input, output, inputOutput)
 
             Assert.assertEquals(input[0]?.intValue, result!![0]?.intValue)
-            Assert.assertEquals(input[0]?.stringValue, result!![0]?.stringValue)
-            Assert.assertEquals(input[0]?.intValue, inputOutput!![0]?.intValue)
-            Assert.assertEquals(input[0]?.stringValue, inputOutput!![0]?.stringValue)
+            Assert.assertEquals(input[0]?.stringValue, result[0]?.stringValue)
+            Assert.assertEquals(input[0]?.intValue, inputOutput[0]?.intValue)
+            Assert.assertEquals(input[0]?.stringValue, inputOutput[0]?.stringValue)
 
 
             val input2 = arrayOf(SimpleParcelable("100", 100))
@@ -483,10 +483,8 @@ class TestKotlinSuspendService {
             Assert.assertEquals(input.data, result?.data)
 
             result = service.testParcel1(input, output, inputOutput)
-            Assert.assertEquals(input.intData, result?.intData)
-            Assert.assertEquals(input.data, result?.data)
-
-
+            Assert.assertEquals(input.intData, result.intData)
+            Assert.assertEquals(input.data, result.data)
         }
     }
 
@@ -509,9 +507,9 @@ class TestKotlinSuspendService {
             result = service.testParcelArray2(input, output, inputOutput)
 
             Assert.assertEquals(input[0]?.intData, result!![0]?.intData)
-            Assert.assertEquals(input[0]?.data, result!![0]?.data)
-            Assert.assertEquals(input[0]?.intData, inputOutput!![0]?.intData)
-            Assert.assertEquals(input[0]?.data, inputOutput!![0]?.data)
+            Assert.assertEquals(input[0]?.data, result[0]?.data)
+            Assert.assertEquals(input[0]?.intData, inputOutput[0]?.intData)
+            Assert.assertEquals(input[0]?.data, inputOutput[0]?.data)
 
             val input2 = arrayOf(CustomData("100", 100))
             val output2 = arrayOf(CustomData("200", 200))
@@ -522,8 +520,6 @@ class TestKotlinSuspendService {
             Assert.assertEquals(input2[0].intData, result2[0].intData)
             Assert.assertEquals(input2[0].intData, output2[0].intData)
             Assert.assertEquals(input2[0].intData, inputOutput2[0].intData)
-
-
         }
     }
 
@@ -545,9 +541,9 @@ class TestKotlinSuspendService {
 
             result = service.testParcelList2(input, output, inputOutput)
             Assert.assertEquals(input[0]?.data, result!![0]?.data)
-            Assert.assertEquals(input[0]?.intData, result!![0]?.intData)
-            Assert.assertEquals(input[0]?.data, inputOutput!![0]?.data)
-            Assert.assertEquals(input[0]?.intData, inputOutput!![0]?.intData)
+            Assert.assertEquals(input[0]?.intData, result[0]?.intData)
+            Assert.assertEquals(input[0]?.data, inputOutput[0]?.data)
+            Assert.assertEquals(input[0]?.intData, inputOutput[0]?.intData)
 
 
             val input2 = mutableListOf(CustomData("100", 100))

@@ -226,7 +226,7 @@ class KotlinServiceImpl : ISampleKotlinService {
         return inMap
     }
 
-    override suspend fun testMap3(inMap: MutableMap<String?, Int>?, outMap: MutableMap<String, Int>?, inOutMap: MutableMap<String, Int>?): MutableMap<String, Int?>? {
+    override suspend fun testMap3(inMap: MutableMap<String?, Int>?, outMap: MutableMap<String, Int>?, inOutMap: MutableMap<String, Int>?): MutableMap<String, Int?> {
         return mutableMapOf()
     }
 
@@ -365,11 +365,11 @@ class KotlinServiceImpl : ISampleKotlinService {
     }
 
     override suspend fun getTemplateRemoter1(): ITest<String, CustomData, CustomData> {
-        return ITest { param1, param2 -> CustomData().also { it.data = "input $param1" } }
+        return ITest { param1, _ -> CustomData().also { it.data = "input $param1" } }
     }
 
-    override suspend fun getTemplateRemoter2(): ITest<String?, CustomData, CustomData?>? {
-        return ITest { param1, param2 -> CustomData().also { it.data = "input $param1" } }
+    override suspend fun getTemplateRemoter2(): ITest<String?, CustomData, CustomData?> {
+        return ITest { param1, _ -> CustomData().also { it.data = "input $param1" } }
     }
 
     private val listeners = mutableListOf<ISampleKotlinServiceListener>()
@@ -400,15 +400,15 @@ class KotlinServiceImpl : ISampleKotlinService {
         100
     }
 
-    override suspend fun testSuspend3(a: Int, b: String): MutableMap<Int?, CustomData?>? = withContext(Dispatchers.IO) {
-        mutableMapOf<Int?, CustomData?>()
+    override suspend fun testSuspend3(a: Int, b: String): MutableMap<Int?, CustomData?> = withContext(Dispatchers.IO) {
+        mutableMapOf()
     }
 
     override suspend fun testSuspend4(a: Int, b: String): MutableMap<Int, CustomData> {
-        return mutableMapOf<Int, CustomData>()
+        return mutableMapOf()
     }
 
-    override fun testSuspend5(a: Int, b: String): MutableMap<Int?, CustomData?>? {
+    override fun testSuspend5(a: Int, b: String): MutableMap<Int?, CustomData?> {
         return mutableMapOf()
     }
 

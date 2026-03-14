@@ -19,7 +19,7 @@ internal class CharParamBuilder(remoterInterfaceElement: KSClassDeclaration, bin
                 methodBuilder.addStatement("$DATA.writeCharArray(" + param.simpleName + ")")
             }
         } else {
-            methodBuilder.addStatement("$DATA.writeInt(" + param.simpleName + ".toInt())")
+            methodBuilder.addStatement("$DATA.writeInt(" + param.simpleName + ".code)")
         }
     }
 
@@ -27,7 +27,7 @@ internal class CharParamBuilder(remoterInterfaceElement: KSClassDeclaration, bin
         if (resultType.isArrayType()) {
             methodBuilder.addStatement("$REPLY.writeCharArray($RESULT)")
         } else {
-            methodBuilder.addStatement("$REPLY.writeInt($RESULT.toInt())")
+            methodBuilder.addStatement("$REPLY.writeInt($RESULT.code)")
         }
     }
 
