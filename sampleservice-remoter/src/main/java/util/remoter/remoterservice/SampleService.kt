@@ -28,7 +28,7 @@ class SampleService : Service() {
 
         //For testing with aidl clients, turn check off
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(receiver, IntentFilter("remoter.test.ProxyStubCheck"), RECEIVER_NOT_EXPORTED)
+            registerReceiver(receiver, IntentFilter("remoter.test.ProxyStubCheck"), RECEIVER_EXPORTED)
         } else {
             @Suppress("UnspecifiedRegisterReceiverFlag")
             registerReceiver(receiver, IntentFilter("remoter.test.ProxyStubCheck"))

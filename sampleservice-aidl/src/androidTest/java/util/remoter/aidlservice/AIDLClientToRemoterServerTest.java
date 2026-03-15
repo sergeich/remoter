@@ -1,5 +1,7 @@
 package util.remoter.aidlservice;
 
+import static util.remoter.aidlservice.ServiceIntents.INTENT_AIDL_TEST_ACTIVITY;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -23,8 +25,6 @@ import java.util.Map;
 import util.remoter.service.FooParcelable;
 import util.remoter.service.ISampleService;
 import util.remoter.service.ISampleServiceListener;
-
-import static util.remoter.aidlservice.ServiceIntents.INTENT_AIDL_TEST_ACTIVITY;
 
 /**
  * Tests AIDL client -  Remoter server
@@ -72,11 +72,11 @@ public class AIDLClientToRemoterServerTest {
             Intent remoterServiceIntent = new Intent(ServiceIntents.INTENT_REMOTER_SERVICE);
             remoterServiceIntent.setClassName("util.remoter.remoterservice", ServiceIntents.INTENT_REMOTER_SERVICE);
 
-            //mActivityRule.getActivity().startService(remoterServiceIntent);
             mActivityRule.getActivity().bindService(remoterServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
-            objectLock.wait();
+            objectLock.wait(10000);
             Log.i(TAG, "Service connected");
+            Assert.assertNotNull("Service connection timed out - is sampleservice-remoter installed?", sampleService);
         }
     }
 
