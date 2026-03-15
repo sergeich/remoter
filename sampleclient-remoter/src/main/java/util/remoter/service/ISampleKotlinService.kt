@@ -7,12 +7,10 @@ import java.io.IOException
 interface ISampleKotlinService {
 
 
-    //vararg is not supported for suspend. Either use array or nonsuspend
-    //suspend fun testVarArg(vararg string: String?)
-
     //If return is nullable for suspend function, specify [NullableType]
 
-    fun testVarArg(vararg string: String?) : Int
+    suspend fun testVarArg(vararg string: String?) : Int
+    suspend fun testNonNullVarArg(vararg string: String) : Int
 
     suspend fun testBoolean1(a: Boolean, @ParamIn arrayIn: BooleanArray, @ParamOut arrayOut: BooleanArray, arrayInOut: BooleanArray): Boolean
     suspend fun testBoolean2(a: Boolean, @ParamIn arrayIn: BooleanArray?, @ParamOut arrayOut: BooleanArray?, arrayInOut: BooleanArray?): BooleanArray

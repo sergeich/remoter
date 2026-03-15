@@ -18,5 +18,4 @@ interface ITimeService {
      * Simulate a service side crash
      */
     suspend fun simulateServiceCrash(): Int
-
 }

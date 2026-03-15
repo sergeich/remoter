@@ -252,7 +252,7 @@ class KMethodBuilder(
             if (isLastParam && param.isVararg) {
                 val componentType = param.asType()
                 methodBuilder.addParameter(
-                    ParameterSpec.builder(param.simpleName, componentType.asKotlinType(typeParamResolver).copy(true))
+                    ParameterSpec.builder(param.simpleName, componentType.asKotlinType(typeParamResolver))
                         .addModifiers(KModifier.VARARG).build()
                 )
             } else {

@@ -60,7 +60,8 @@ internal class StringParamBuilder(remoterInterfaceElement: KSClassDeclaration, b
     override fun writeParamsToStub(methodType: KSFunctionDeclaration, param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
         if (param.isVararg) {
             methodBuilder.addStatement("val ${paramName}_size = $DATA.readInt()")
-            methodBuilder.addStatement("var $paramName = Array(${paramName}_size) { $DATA.readString() }")
+            val nullAssert = if (param.isNullable()) "" else "!!"
+            methodBuilder.addStatement("var $paramName = Array(${paramName}_size) { $DATA.readString()$nullAssert }")
         } else {
             super.writeParamsToStub(methodType, param, paramType, paramName, methodBuilder)
             if (param.asType().isArrayType()) {

@@ -22,10 +22,19 @@ class KotlinServiceImpl : ISampleKotlinService {
         const val TAG = "KotlinServiceImpl"
     }
 
-    override fun testVarArg(vararg string: String?)  : Int {
+    override suspend fun testVarArg(vararg string: String?)  : Int {
         var totalSize = 0
         string.forEach {
             Log.v(TAG, "testVarArg $it")
+            totalSize ++
+        }
+        return totalSize
+    }
+
+    override suspend fun testNonNullVarArg(vararg string: String)  : Int {
+        var totalSize = 0
+        string.forEach {
+            Log.v(TAG, "testNonNullVarArg $it")
             totalSize ++
         }
         return totalSize

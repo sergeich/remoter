@@ -64,9 +64,10 @@ internal class ListOfParcelerParamBuilder(
     }
 
     override fun readOutResultsFromStub(param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
-        methodBuilder.beginControlFlow("if ($paramName != null)")
-        methodBuilder.addStatement("$REPLY.writeInt($paramName.size)")
-        methodBuilder.beginControlFlow("for(item in $paramName )")
+        methodBuilder.addStatement("val __nonnull_$paramName = $paramName")
+        methodBuilder.beginControlFlow("if (__nonnull_$paramName != null)")
+        methodBuilder.addStatement("$REPLY.writeInt(__nonnull_$paramName.size)")
+        methodBuilder.beginControlFlow("for(item in __nonnull_$paramName )")
         methodBuilder.addStatement("val pClass = getParcelerClass(item)")
         methodBuilder.addStatement("$REPLY.writeString(pClass!!.getName())")
         methodBuilder.addStatement("org.parceler.Parcels.wrap(pClass, item).writeToParcel($REPLY, android.os.Parcelable.PARCELABLE_WRITE_RETURN_VALUE)")
@@ -107,18 +108,23 @@ internal class ListOfParcelerParamBuilder(
     override fun writeParamsToStub(methodType: KSFunctionDeclaration, param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
         val elementIsNullable = param.type.resolve().arguments.firstOrNull()?.type?.resolve()?.isMarkedNullable ?: false
         val elementType = genericType.asKotlinType().copy(nullable = elementIsNullable)
-        // Declare as MutableList<T> (not out-projected) so add() is callable
-        methodBuilder.addStatement("var $paramName: MutableList<%T> = mutableListOf()", elementType)
+        // Declare as MutableList<T>? = null for nullable params, MutableList<T> = mutableListOf() otherwise
+        if (param.isNullable()) {
+            methodBuilder.addStatement("var $paramName: MutableList<%T>? = null", elementType)
+        } else {
+            methodBuilder.addStatement("var $paramName: MutableList<%T> = mutableListOf()", elementType)
+        }
         if (param.asType().isArrayType()) {
             logError("List[] is not supported")
         } else {
             if (paramType != ParamType.OUT) {
                 methodBuilder.addStatement("val size_$paramName = $DATA.readInt()")
                 methodBuilder.beginControlFlow("if (size_$paramName >=0)")
-                methodBuilder.addStatement("$paramName = mutableListOf()")
+                methodBuilder.addStatement("val __list_$paramName = mutableListOf<%T>()", elementType)
                 methodBuilder.beginControlFlow("for(i in 0 until size_$paramName)")
-                methodBuilder.addStatement("$paramName.add(getParcelerObject($DATA.readString(), $DATA) as %T )", elementType)
+                methodBuilder.addStatement("__list_$paramName.add(getParcelerObject($DATA.readString(), $DATA) as %T )", elementType)
                 methodBuilder.endControlFlow()
+                methodBuilder.addStatement("$paramName = __list_$paramName")
                 methodBuilder.endControlFlow()
                 methodBuilder.beginControlFlow("else")
                 if (!param.isNullable()) {

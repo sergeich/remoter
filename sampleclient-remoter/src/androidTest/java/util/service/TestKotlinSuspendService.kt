@@ -598,9 +598,20 @@ class TestKotlinSuspendService {
 
     @Test
     fun testVarArg() {
-        Assert.assertEquals(0, service.testVarArg())
-        Assert.assertEquals(1, service.testVarArg("a"))
-        Assert.assertEquals(1, service.testVarArg(null))
-        Assert.assertEquals(2, service.testVarArg(null, "a"))
+        runBlocking {
+            Assert.assertEquals(0, service.testVarArg())
+            Assert.assertEquals(1, service.testVarArg("a"))
+            Assert.assertEquals(1, service.testVarArg(null))
+            Assert.assertEquals(2, service.testVarArg(null, "a"))
+        }
+    }
+
+    @Test
+    fun testNonNullVarArg() {
+        runBlocking {
+            Assert.assertEquals(0, service.testNonNullVarArg())
+            Assert.assertEquals(1, service.testNonNullVarArg("a"))
+            Assert.assertEquals(2, service.testNonNullVarArg("a", "b"))
+        }
     }
 }
