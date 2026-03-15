@@ -32,12 +32,6 @@ open class KBindingManager(
         resolver.getClassDeclarationByName("android.os.Parcelable")
     }
 
-    private val parcelClass: Class<*>? = try {
-        Class.forName("org.parceler.Parcel")
-    } catch (_: ClassNotFoundException) {
-        null
-    }
-
     private val remoterBuilderAvailable: Boolean =
         resolver.getClassDeclarationByName("remoter.builder.ServiceConnector") != null
 
@@ -173,7 +167,7 @@ open class KBindingManager(
                 return BinderParamBuilder(remoteElement, this)
             }
 
-            if (parcelClass != null && decl.annotations.any {
+            if (decl.annotations.any {
                     it.annotationType.resolve().declaration.qualifiedName?.asString() == PARCELER_ANNOTATION
                 }
             ) {
@@ -192,7 +186,6 @@ open class KBindingManager(
      * If [listType] is a List whose type argument carries @Parcel, returns that class declaration.
      */
     private fun getGenericParcelerListType(listType: KSType): KSClassDeclaration? {
-        if (parcelClass == null) return null
         for (arg in listType.arguments) {
             val argType = arg.type?.resolve() ?: continue
             val argDecl = argType.declaration as? KSClassDeclaration ?: continue

@@ -85,10 +85,12 @@ internal class ListOfParcelerParamBuilder(
         } else {
             methodBuilder.addStatement("val _size_result = $REPLY.readInt()")
             methodBuilder.beginControlFlow("if(_size_result >= 0)")
-            methodBuilder.addStatement("$RESULT = mutableListOf()")
+            // Build into a concrete MutableList<T> to avoid out-projection preventing add()
+            methodBuilder.addStatement("val __tmp_result = mutableListOf<%T>()", genericType.asKotlinType())
             methodBuilder.beginControlFlow("for(i in 0 until _size_result) ")
-            methodBuilder.addStatement("$RESULT.add(getParcelerObject($REPLY.readString(), $REPLY) as %T)", genericType.asKotlinType())
+            methodBuilder.addStatement("__tmp_result.add(getParcelerObject($REPLY.readString(), $REPLY) as %T)", genericType.asKotlinType())
             methodBuilder.endControlFlow()
+            methodBuilder.addStatement("$RESULT = __tmp_result")
             methodBuilder.endControlFlow()
             methodBuilder.beginControlFlow("else")
             if (resultType.isNullable) {
@@ -101,13 +103,12 @@ internal class ListOfParcelerParamBuilder(
     }
 
     override fun writeParamsToStub(methodType: KSFunctionDeclaration, param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
-        methodBuilder.addStatement("val $paramName:%T ", param.asKotlinType())
+        // Declare as MutableList<T> (not out-projected) so add() is callable
+        methodBuilder.addStatement("var $paramName: MutableList<%T> = mutableListOf()", genericType.asKotlinType())
         if (param.asType().isArrayType()) {
             logError("List[] is not supported")
         } else {
-            if (paramType == ParamType.OUT) {
-                methodBuilder.addStatement("$paramName = mutableListOf()")
-            } else {
+            if (paramType != ParamType.OUT) {
                 methodBuilder.addStatement("val size_$paramName = $DATA.readInt()")
                 methodBuilder.beginControlFlow("if (size_$paramName >=0)")
                 methodBuilder.addStatement("$paramName = mutableListOf()")
@@ -116,9 +117,7 @@ internal class ListOfParcelerParamBuilder(
                 methodBuilder.endControlFlow()
                 methodBuilder.endControlFlow()
                 methodBuilder.beginControlFlow("else")
-                if (param.isNullable()) {
-                    methodBuilder.addStatement("$paramName = null")
-                } else {
+                if (!param.isNullable()) {
                     methodBuilder.addStatement("$paramName = mutableListOf()")
                 }
                 methodBuilder.endControlFlow()
@@ -128,12 +127,14 @@ internal class ListOfParcelerParamBuilder(
 
     override fun readOutParamsFromProxy(param: KSValueParameter, paramType: ParamType, methodBuilder: FunSpec.Builder) {
         if (paramType != ParamType.IN) {
-            val callOperation = if (param.isNullable()) "?." else "."
-            methodBuilder.addStatement("val _size_" + param.simpleName + " = $REPLY.readInt()")
-            methodBuilder.beginControlFlow("if(_size_" + param.simpleName + " >= 0)")
-            methodBuilder.addStatement(param.simpleName + "${callOperation}clear()")
-            methodBuilder.beginControlFlow("for(i in 0 until _size_" + param.simpleName + ")")
-            methodBuilder.addStatement("${param.simpleName}${callOperation}add(getParcelerObject($REPLY.readString(), $REPLY) as %T)", genericType.asKotlinType())
+            val n = param.simpleName
+            methodBuilder.addStatement("val _size_$n = $REPLY.readInt()")
+            methodBuilder.beginControlFlow("if(_size_$n >= 0)")
+            // Cast to MutableList<T> to avoid out-projection preventing add()
+            methodBuilder.addStatement("val __typed_$n = $n as? MutableList<%T>", genericType.asKotlinType())
+            methodBuilder.addStatement("__typed_$n?.clear()")
+            methodBuilder.beginControlFlow("for(i in 0 until _size_$n)")
+            methodBuilder.addStatement("__typed_$n?.add(getParcelerObject($REPLY.readString(), $REPLY) as %T)", genericType.asKotlinType())
             methodBuilder.endControlFlow()
             methodBuilder.endControlFlow()
         }

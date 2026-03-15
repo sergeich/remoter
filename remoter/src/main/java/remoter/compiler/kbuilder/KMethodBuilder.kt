@@ -226,7 +226,8 @@ class KMethodBuilder(
             methodBuilder.addModifiers(KModifier.SUSPEND)
             methodBuilder.returns(member.getReturnTypeOfSuspend().asKotlinType(typeParamResolver).copy(isSuspendReturnNullable))
         } else {
-            methodBuilder.returns(member.getReturnAsKotlinType(typeParamResolver))
+            val retType = member.getReturnAsKotlinType(typeParamResolver)
+            methodBuilder.returns(if (member.isReturnPotentiallyNullable()) retType.copy(nullable = true) else retType)
         }
 
         // @Throws annotation
@@ -277,7 +278,9 @@ class KMethodBuilder(
             }
         } else {
             if (!member.getReturnAsKSType().isVoidType()) {
-                methodBuilder.addStatement("var ${ParamBuilder.RESULT}: %T", member.getReturnAsKotlinType(typeParamResolver))
+                val resultType = member.getReturnAsKotlinType(typeParamResolver)
+                methodBuilder.addStatement("var ${ParamBuilder.RESULT}: %T",
+                    if (member.isReturnPotentiallyNullable()) resultType.copy(nullable = true) else resultType)
             }
         }
 

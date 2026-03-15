@@ -5,6 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.os.Build
 import android.os.IBinder
 import android.util.Log
 import util.remoter.service.ISampleService
@@ -26,7 +27,12 @@ class SampleService : Service() {
         Log.v(TAG, "Service Create")
 
         //For testing with aidl clients, turn check off
-        registerReceiver(receiver, IntentFilter("remoter.test.ProxyStubCheck"))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(receiver, IntentFilter("remoter.test.ProxyStubCheck"), RECEIVER_NOT_EXPORTED)
+        } else {
+            @Suppress("UnspecifiedRegisterReceiverFlag")
+            registerReceiver(receiver, IntentFilter("remoter.test.ProxyStubCheck"))
+        }
     }
 
     override fun onDestroy() {

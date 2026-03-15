@@ -41,7 +41,7 @@ import static util.remoter.remoterservice.ServiceIntents.INTENT_REMOTER_TEST_ACT
 public class RemoterClientToAidlServerTest {
 
     private static final String TAG = RemoterClientToAidlServerTest.class.getSimpleName();
-    private Object objectLock = new Object();
+    private final Object objectLock = new Object();
     private ISampleService sampleService;
 
 
@@ -125,10 +125,10 @@ public class RemoterClientToAidlServerTest {
         Log.i(TAG, "Boolean Result " + result);
 
         Assert.assertEquals(a, result);
-        Assert.assertEquals(true, arrayOut[0]);
-        Assert.assertEquals(false, arrayOut[1]);
-        Assert.assertEquals(false, arrayInOut[0]);
-        Assert.assertEquals(false, arrayInOut[1]);
+        Assert.assertTrue(arrayOut[0]);
+        Assert.assertFalse(arrayOut[1]);
+        Assert.assertFalse(arrayInOut[0]);
+        Assert.assertFalse(arrayInOut[1]);
     }
 
     @Test

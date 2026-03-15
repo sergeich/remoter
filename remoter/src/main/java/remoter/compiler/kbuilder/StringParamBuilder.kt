@@ -4,6 +4,7 @@ import com.google.devtools.ksp.symbol.KSClassDeclaration
 import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
+import com.google.devtools.ksp.symbol.Nullability
 import com.squareup.kotlinpoet.FunSpec
 
 
@@ -42,7 +43,7 @@ internal class StringParamBuilder(remoterInterfaceElement: KSClassDeclaration, b
         if (resultKSType.isArrayType()) {
             methodBuilder.addStatement("$RESULT = $REPLY.createStringArray()")
         } else {
-            if (resultType.isNullable) {
+            if (resultType.isNullable || resultKSType.nullability == Nullability.PLATFORM) {
                 methodBuilder.addStatement("$RESULT = $REPLY.readString()")
             } else {
                 methodBuilder.addStatement("$RESULT = $REPLY.readString()!!")

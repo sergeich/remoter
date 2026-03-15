@@ -1,6 +1,10 @@
 package util.service;
 
+import static util.remoter.remoterservice.ServiceIntents.INTENT_REMOTER_SERVICE;
+import static util.remoter.remoterservice.ServiceIntents.INTENT_REMOTER_TEST_ACTIVITY;
+
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.IBinder;
@@ -35,10 +39,6 @@ import util.remoter.service.ISampleService_Proxy;
 import util.remoter.service.ITest;
 import util.remoter.service.TestEnum;
 
-import static util.remoter.remoterservice.ServiceIntents.INTENT_AIDL_SERVICE;
-import static util.remoter.remoterservice.ServiceIntents.INTENT_REMOTER_SERVICE;
-import static util.remoter.remoterservice.ServiceIntents.INTENT_REMOTER_TEST_ACTIVITY;
-
 
 /**
  * Tests Remoter client -  Remoter server
@@ -46,7 +46,7 @@ import static util.remoter.remoterservice.ServiceIntents.INTENT_REMOTER_TEST_ACT
 public class RemoterClientToRemoterServerTest {
 
     private static final String TAG = RemoterClientToRemoterServerTest.class.getSimpleName();
-    private Object objectLock = new Object();
+    private final Object objectLock = new Object();
     private ISampleService sampleService;
 
 
@@ -71,8 +71,7 @@ public class RemoterClientToRemoterServerTest {
     public ActivityTestRule<TestActivity> mActivityRule = new ActivityTestRule<TestActivity>(TestActivity.class) {
         @Override
         protected Intent getActivityIntent() {
-            Intent intent = new Intent(INTENT_REMOTER_TEST_ACTIVITY);
-            return intent;
+            return new Intent(INTENT_REMOTER_TEST_ACTIVITY);
         }
     };
 
@@ -82,8 +81,8 @@ public class RemoterClientToRemoterServerTest {
             Intent remoterServiceIntent = new Intent(INTENT_REMOTER_SERVICE);
             remoterServiceIntent.setClassName("util.remoter.remoterservice", INTENT_REMOTER_SERVICE);
 
-            mActivityRule.getActivity().startService(remoterServiceIntent);
-            mActivityRule.getActivity().bindService(remoterServiceIntent, serviceConnection, 0);
+            //mActivityRule.getActivity().startService(remoterServiceIntent);
+            mActivityRule.getActivity().bindService(remoterServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
             objectLock.wait();
             Log.i(TAG, "Service connected");
@@ -131,10 +130,10 @@ public class RemoterClientToRemoterServerTest {
         Log.i(TAG, "Boolean Result " + result);
 
         Assert.assertEquals(a, result);
-        Assert.assertEquals(true, arrayOut[0]);
-        Assert.assertEquals(false, arrayOut[1]);
-        Assert.assertEquals(false, arrayInOut[0]);
-        Assert.assertEquals(false, arrayInOut[1]);
+        Assert.assertTrue(arrayOut[0]);
+        Assert.assertFalse(arrayOut[1]);
+        Assert.assertFalse(arrayInOut[0]);
+        Assert.assertFalse(arrayInOut[1]);
     }
 
     @Test

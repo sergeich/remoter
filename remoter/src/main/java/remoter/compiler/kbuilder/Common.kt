@@ -8,6 +8,7 @@ import com.google.devtools.ksp.symbol.KSFunctionDeclaration
 import com.google.devtools.ksp.symbol.KSType
 import com.google.devtools.ksp.symbol.KSValueParameter
 import com.google.devtools.ksp.symbol.Modifier
+import com.google.devtools.ksp.symbol.Nullability
 import com.squareup.kotlinpoet.TypeName
 import com.squareup.kotlinpoet.ksp.TypeParameterResolver
 import com.squareup.kotlinpoet.ksp.toTypeName
@@ -114,6 +115,13 @@ private fun KSFunctionDeclaration.declaringClassTypeParamResolver(): TypeParamet
 /** True when the function's return type is marked nullable. */
 internal fun KSFunctionDeclaration.isNullable(): Boolean =
     returnType?.resolve()?.isMarkedNullable == true
+
+/**
+ * True when the return type is marked nullable OR is a Java platform type (unannoted reference
+ * type that may legitimately be null at runtime).
+ */
+internal fun KSFunctionDeclaration.isReturnPotentiallyNullable(): Boolean =
+    returnType?.resolve()?.let { it.isMarkedNullable || it.nullability == Nullability.PLATFORM } == true
 
 // ─── KSClassDeclaration helpers ──────────────────────────────────────────
 
