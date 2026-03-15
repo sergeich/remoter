@@ -11,8 +11,6 @@ repositories {
     google()
 }
 
-apply plugin: 'org.jetbrains.dokka'
-
 android {
     namespace "remoter.builder"
     compileSdkVersion libs.versions.compileSdk.get().toInteger()
@@ -38,12 +36,6 @@ dependencies {
 kotlin {
     jvmToolchain(17)
 }
-
-dokkaHtml.configure {
-    outputDirectory.set(new File("$buildDir/docs/javadoc"))
-}
-
-//apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
 
 version = VERSION_NAME
 group = GROUP

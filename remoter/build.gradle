@@ -2,6 +2,7 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'kotlin'
+    id 'org.jetbrains.dokka'
 }
 
 dependencies {

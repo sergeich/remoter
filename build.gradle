@@ -17,6 +17,31 @@ plugins {
     id("org.jetbrains.dokka") version "2.1.0"
 }
 
+repositories {
+    google()
+    mavenCentral()
+    gradlePluginPortal()
+}
+
+dokka {
+    dokkaPublications.html {
+        moduleName.set("Remoter")
+        moduleVersion.set(project.version.toString())
+        outputDirectory.set(layout.buildDirectory.dir("docs/javadoc"))
+        includes.from("README.md")
+    }
+
+    dokkaSourceSets.configureEach {
+        documentedVisibilities.set(setOf(VisibilityModifier.Public)) // OR documentedVisibilities(VisibilityModifier.Public)
+    }
+}
+
+dependencies {
+    dokka(project(":remoter"))
+    dokka(project(":remoter-annotations"))
+    dokka(project(":remoter-builder"))
+}
+
 subprojects { project ->
     group = GROUP
     version = VERSION_NAME

@@ -73,14 +73,14 @@ That's it!
 	* You an also use a marker interface that can provide a list of interfaces for which to generate the Remoter Proxy/Stub classes. For this, annotate @Remoter on the marker interface and specify the list of classes for "**classesToWrap**"
 	
 ```java
-  /**
-   * Example of a marker remoter interface that specifies other interfaces that should generate remoter proxy stub
-   * <p>
-   * In this case no proxy/stub gets generate for Marker, but it gets generated for IBaseA and IBaseB
-   */
-	@Remoter(classesToWrap = {IBaseA.class, IBaseB.class})
-	private interface Marker {
-	}
+/**
+ * Example of a marker remoter interface that specifies other interfaces that should generate remoter proxy stub
+ * <p>
+ * In this case no proxy/stub gets generate for Marker, but it gets generated for IBaseA and IBaseB
+ */
+@Remoter(classesToWrap = {IBaseA.class, IBaseB.class})
+private interface Marker {
+}
 ```
 	
 * **@ParamIn** Mark an array or Parcelable parameter as an **input only** parameter(**in** of aidl). By **default** they are **input and output** (inout of aidl)
@@ -115,7 +115,7 @@ interface ISampleService {
 
 * Include the depednecy for RemoterBuilder to take advantage of suspended service connection
 
-```kotlin
+```groovy
 implementation 'com.josesamuel:remoter-builder:<VERSION>'
 ```
 
@@ -125,18 +125,18 @@ implementation 'com.josesamuel:remoter-builder:<VERSION>'
 
 //From your coroutine context - 
 
-//create service using serviceintent
+//create service using SERVICE_INTENT
 val service = ISampleService_Proxy(context, SERVICE_INTENT)
 
 //call the suspend function
 val authenticated = service.authenticate(userName, password)
 
-//The above call will 
- - suspend the current context
- - connect to service, 
- - make the remote call, 
-
- all sequentially without blocking the calling thread!
+// The above call will 
+// - suspend the current context
+// - connect to service, 
+// - make the remote call, 
+//
+// all sequentially without blocking the calling thread!
  
 ```
 
