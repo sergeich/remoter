@@ -83,12 +83,14 @@ internal class ListOfParcelerParamBuilder(
         if (resultKSType.isArrayType()) {
             logError("List[] is not supported")
         } else {
+            val elementIsNullable = resultKSType.arguments.firstOrNull()?.type?.resolve()?.isMarkedNullable ?: false
+            val elementType = genericType.asKotlinType().copy(nullable = elementIsNullable)
             methodBuilder.addStatement("val _size_result = $REPLY.readInt()")
             methodBuilder.beginControlFlow("if(_size_result >= 0)")
             // Build into a concrete MutableList<T> to avoid out-projection preventing add()
-            methodBuilder.addStatement("val __tmp_result = mutableListOf<%T>()", genericType.asKotlinType())
+            methodBuilder.addStatement("val __tmp_result = mutableListOf<%T>()", elementType)
             methodBuilder.beginControlFlow("for(i in 0 until _size_result) ")
-            methodBuilder.addStatement("__tmp_result.add(getParcelerObject($REPLY.readString(), $REPLY) as %T)", genericType.asKotlinType())
+            methodBuilder.addStatement("__tmp_result.add(getParcelerObject($REPLY.readString(), $REPLY) as %T)", elementType)
             methodBuilder.endControlFlow()
             methodBuilder.addStatement("$RESULT = __tmp_result")
             methodBuilder.endControlFlow()
@@ -103,8 +105,10 @@ internal class ListOfParcelerParamBuilder(
     }
 
     override fun writeParamsToStub(methodType: KSFunctionDeclaration, param: KSValueParameter, paramType: ParamType, paramName: String, methodBuilder: FunSpec.Builder) {
+        val elementIsNullable = param.type.resolve().arguments.firstOrNull()?.type?.resolve()?.isMarkedNullable ?: false
+        val elementType = genericType.asKotlinType().copy(nullable = elementIsNullable)
         // Declare as MutableList<T> (not out-projected) so add() is callable
-        methodBuilder.addStatement("var $paramName: MutableList<%T> = mutableListOf()", genericType.asKotlinType())
+        methodBuilder.addStatement("var $paramName: MutableList<%T> = mutableListOf()", elementType)
         if (param.asType().isArrayType()) {
             logError("List[] is not supported")
         } else {
@@ -113,7 +117,7 @@ internal class ListOfParcelerParamBuilder(
                 methodBuilder.beginControlFlow("if (size_$paramName >=0)")
                 methodBuilder.addStatement("$paramName = mutableListOf()")
                 methodBuilder.beginControlFlow("for(i in 0 until size_$paramName)")
-                methodBuilder.addStatement("$paramName.add(getParcelerObject($DATA.readString(), $DATA) as %T )", genericType.asKotlinType())
+                methodBuilder.addStatement("$paramName.add(getParcelerObject($DATA.readString(), $DATA) as %T )", elementType)
                 methodBuilder.endControlFlow()
                 methodBuilder.endControlFlow()
                 methodBuilder.beginControlFlow("else")
@@ -127,14 +131,16 @@ internal class ListOfParcelerParamBuilder(
 
     override fun readOutParamsFromProxy(param: KSValueParameter, paramType: ParamType, methodBuilder: FunSpec.Builder) {
         if (paramType != ParamType.IN) {
+            val elementIsNullable = param.type.resolve().arguments.firstOrNull()?.type?.resolve()?.isMarkedNullable ?: false
+            val elementType = genericType.asKotlinType().copy(nullable = elementIsNullable)
             val n = param.simpleName
             methodBuilder.addStatement("val _size_$n = $REPLY.readInt()")
             methodBuilder.beginControlFlow("if(_size_$n >= 0)")
             // Cast to MutableList<T> to avoid out-projection preventing add()
-            methodBuilder.addStatement("val __typed_$n = $n as? MutableList<%T>", genericType.asKotlinType())
+            methodBuilder.addStatement("val __typed_$n = $n as? MutableList<%T>", elementType)
             methodBuilder.addStatement("__typed_$n?.clear()")
             methodBuilder.beginControlFlow("for(i in 0 until _size_$n)")
-            methodBuilder.addStatement("__typed_$n?.add(getParcelerObject($REPLY.readString(), $REPLY) as %T)", genericType.asKotlinType())
+            methodBuilder.addStatement("__typed_$n?.add(getParcelerObject($REPLY.readString(), $REPLY) as %T)", elementType)
             methodBuilder.endControlFlow()
             methodBuilder.endControlFlow()
         }
