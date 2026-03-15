@@ -1,9 +1,6 @@
 package util.remoter.service;
 
-import android.os.Parcelable;
-
 import org.parceler.Parcel;
-import org.parceler.Parcels;
 
 import java.util.List;
 

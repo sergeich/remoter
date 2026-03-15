@@ -1,5 +1,8 @@
 package util.service;
 
+import static util.remoter.remoterservice.ServiceIntents.INTENT_AIDL_SERVICE;
+import static util.remoter.remoterservice.ServiceIntents.INTENT_REMOTER_TEST_ACTIVITY;
+
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -21,16 +24,12 @@ import java.util.List;
 import java.util.Map;
 
 import remoter.RemoterProxy;
-import remoter.RemoterProxyListener;
 import util.remoter.remoterservice.TestActivity;
 import util.remoter.service.FooParcelable;
 import util.remoter.service.ISampleService;
 import util.remoter.service.ISampleServiceListener;
 import util.remoter.service.ISampleServiceListener_Stub;
 import util.remoter.service.ISampleService_Proxy;
-
-import static util.remoter.remoterservice.ServiceIntents.INTENT_AIDL_SERVICE;
-import static util.remoter.remoterservice.ServiceIntents.INTENT_REMOTER_TEST_ACTIVITY;
 
 
 /**

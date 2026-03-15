@@ -7,17 +7,13 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.os.PersistableBundle
 import android.util.Log
 import android.view.View
-import android.widget.TextView
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import remoter.RemoterProxy
 import remoter.builder.ServiceConnector
-//import remoter.builder.ServiceConnector
 import util.remoter.service.*
-import java.lang.Exception
 
 /**
  * A sample client to validate there are no memory leaks while sending the stub across remote process.

@@ -1,6 +1,5 @@
 package util.remoter.remoterservice;
 
-import util.remoter.service.IServiceInterfaceWithLesserMethods;
 import util.remoter.service.IServiceInterfaceWithMoreMethods;
 
 public class TestServiceImplWithMore implements IServiceInterfaceWithMoreMethods {

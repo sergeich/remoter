@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import remoter.RemoterProxy;
-import remoter.RemoterStub;
 import util.remoter.service.CustomData;
 import util.remoter.service.FooParcelable;
 import util.remoter.service.IExtE;

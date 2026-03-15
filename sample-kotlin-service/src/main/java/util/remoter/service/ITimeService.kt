@@ -1,7 +1,6 @@
 package util.remoter.service
 
-import remoter.annotations.*
-import java.io.IOException
+import remoter.annotations.Remoter
 
 
 /**

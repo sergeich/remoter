@@ -3,8 +3,6 @@ package util.remoter.service;
 import org.parceler.Parcel;
 import org.parceler.ParcelConstructor;
 
-import java.util.List;
-
 /**
  * For testing @Parcel (parceler)
  */

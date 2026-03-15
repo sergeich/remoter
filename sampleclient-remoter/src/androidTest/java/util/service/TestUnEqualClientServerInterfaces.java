@@ -1,5 +1,8 @@
 package util.service;
 
+import static util.remoter.remoterclient.ServiceIntents.INTENT_REMOTER_SERVICE;
+import static util.remoter.remoterclient.ServiceIntents.INTENT_REMOTER_TEST_ACTIVITY;
+
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -18,9 +21,6 @@ import util.remoter.service.ISampleService;
 import util.remoter.service.ISampleService_Proxy;
 import util.remoter.service.IServiceInterfaceWithLesserMethods;
 import util.remoter.service.IServiceInterfaceWithMoreMethods;
-
-import static util.remoter.remoterclient.ServiceIntents.INTENT_REMOTER_SERVICE;
-import static util.remoter.remoterclient.ServiceIntents.INTENT_REMOTER_TEST_ACTIVITY;
 
 
 /**
