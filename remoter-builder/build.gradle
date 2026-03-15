@@ -6,8 +6,6 @@ plugins {
     id 'org.jetbrains.dokka'
 }
 
-
-
 repositories {
     mavenCentral()
     google()
@@ -36,32 +34,20 @@ android {
 
 dependencies {
     compileOnly libs.kotlinx.coroutines.core
-
-    testImplementation group: 'junit', name: 'junit', version: '4.12'
-    testImplementation libs.kotlinx.coroutines.core
-
 }
 
 kotlin {
     jvmToolchain(17)
 }
 
-
 dokkaHtml.configure {
     outputDirectory.set(new File("$buildDir/docs/javadoc"))
 }
 
-
-
 //apply from: rootProject.file('gradle/gradle-mvn-push.gradle')
-
-
-
 
 version = VERSION_NAME
 group = GROUP
-
-
 
 publishing {
     publications {
@@ -116,7 +102,6 @@ publishing {
         }
     }
 }
-
 
 signing {
     sign publishing.publications.release
