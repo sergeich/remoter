@@ -1,7 +1,5 @@
-//apply plugin: 'java-library'
-
 plugins {
-    id 'java-library'
+    id 'kotlin'
     id 'maven-publish'
     id 'signing'
 }
@@ -12,14 +10,9 @@ dependencies {
 version = VERSION_NAME
 group = GROUP
 
-java {
-    withJavadocJar()
-    withSourcesJar()
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(11)
-    }
+kotlin {
+    jvmToolchain(17)
 }
-
 
 publishing {
     publications {

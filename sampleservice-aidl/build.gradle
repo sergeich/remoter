@@ -30,9 +30,3 @@ dependencies {
     androidTestImplementation libs.junit
     androidTestImplementation libs.android.test.rules
 }
-
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
-    }
-}

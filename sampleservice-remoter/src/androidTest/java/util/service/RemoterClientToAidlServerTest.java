@@ -78,7 +78,7 @@ public class RemoterClientToAidlServerTest {
             //mActivityRule.getActivity().startService(remoterServiceIntent);
             mActivityRule.getActivity().bindService(remoterServiceIntent, serviceConnection, Context.BIND_AUTO_CREATE);
 
-            objectLock.wait();
+            objectLock.wait(10000);
             Log.i(TAG, "Service connected");
         }
     }

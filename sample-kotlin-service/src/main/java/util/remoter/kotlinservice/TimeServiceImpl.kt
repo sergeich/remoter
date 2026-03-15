@@ -1,7 +1,6 @@
 package util.remoter.kotlinservice
 
 import android.util.Log
-import kotlinx.coroutines.Dispatchers
 import util.remoter.service.ITimeService
 import kotlin.system.exitProcess
 
@@ -19,7 +18,6 @@ class TimeServiceImpl : ITimeService {
     override suspend fun getTime(): Long {
         val time = System.currentTimeMillis()
         Log.v(TAG, "getTime returning :$time")
-        Dispatchers
         return time
     }
 
