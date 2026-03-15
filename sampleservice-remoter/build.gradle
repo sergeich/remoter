@@ -36,10 +36,10 @@ dependencies {
 
 
 //After release
-//    api "com.josesamuel:remoter-annotations:$VERSION_NAME"
-//    annotationProcessor "com.josesamuel:remoter:$VERSION_NAME"
+    api "com.josesamuel:remoter-annotations:$VERSION_NAME"
+    ksp "com.josesamuel:remoter:$VERSION_NAME"
 
 //During development
-    api project(path: ':remoter-annotations')
-    ksp project(path: ':remoter')
+//    api project(path: ':remoter-annotations')
+//    ksp project(path: ':remoter')
 }

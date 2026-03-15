@@ -37,14 +37,14 @@ dependencies {
     kapt libs.parceler
 
 //After release
-//    api "com.josesamuel:remoter-annotations:$VERSION_NAME"
-//    implementation "com.josesamuel:remoter-builder:$VERSION_NAME"
-//    ksp "com.josesamuel:remoter:$VERSION_NAME"
+    api "com.josesamuel:remoter-annotations:$VERSION_NAME"
+    implementation "com.josesamuel:remoter-builder:$VERSION_NAME"
+    ksp "com.josesamuel:remoter:$VERSION_NAME"
 
 //During development
-    api project(path: ':remoter-annotations')
-    ksp project(path: ':remoter')
-    implementation project(path: ':remoter-builder')
+//    api project(path: ':remoter-annotations')
+//    ksp project(path: ':remoter')
+//    implementation project(path: ':remoter-builder')
 
     implementation libs.kotlinx.coroutines.core
 }
