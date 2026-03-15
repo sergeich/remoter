@@ -1,10 +1,4 @@
 buildscript {
-    ext.versions = [
-            'minSdk'    : 9,
-            'compileSdk': 28,
-            'release'   : '${VERSION_NAME}'
-    ]
-
     repositories {
         mavenCentral()
         google()
