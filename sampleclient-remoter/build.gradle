@@ -36,9 +36,9 @@ dependencies {
     kapt libs.parceler
 
 //After release
-    api "com.josesamuel:remoter-annotations:$VERSION_NAME"
-    implementation "com.josesamuel:remoter-builder:$VERSION_NAME"
-    ksp "com.josesamuel:remoter:$VERSION_NAME"
+    api "me.sergeich:remoter-annotations:$VERSION_NAME"
+    implementation "me.sergeich:remoter-builder:$VERSION_NAME"
+    ksp "me.sergeich:remoter:$VERSION_NAME"
 
 //During development
 //    api project(path: ':remoter-annotations')

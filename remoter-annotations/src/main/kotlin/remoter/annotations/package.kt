@@ -31,8 +31,8 @@
  *
  * To add Remoter to your project, add these to your Gradle **dependencies**:
  *
- * `api("com.josesamuel:remoter-annotations:VERSION")`
+ * `api("me.sergeich:remoter-annotations:VERSION")`
  *
- * `ksp("com.josesamuel:remoter:VERSION")`
+ * `ksp("me.sergeich:remoter:VERSION")`
  */
 package remoter.annotations
