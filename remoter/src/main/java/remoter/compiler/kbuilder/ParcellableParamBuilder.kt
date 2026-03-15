@@ -81,7 +81,11 @@ internal class ParcellableParamBuilder(remoterInterfaceElement: KSClassDeclarati
             methodBuilder.addStatement("$RESULT = $REPLY.createTypedArray(" + getParcelableClassName(resultKSType) + ".CREATOR) as %T", resultType)
         } else {
             methodBuilder.beginControlFlow("if ($REPLY.readInt() != 0)")
-            methodBuilder.addStatement("$RESULT = (" + getParcelableClassName(resultKSType) + ".CREATOR.createFromParcel($REPLY) as %T)", resultType)
+            if (resultKSType.arguments.isNotEmpty()) {
+                methodBuilder.addStatement("$RESULT = (" + getParcelableClassName(resultKSType) + ".CREATOR.createFromParcel($REPLY) as %T)", resultType)
+            } else {
+                methodBuilder.addStatement("$RESULT = " + getParcelableClassName(resultKSType) + ".CREATOR.createFromParcel($REPLY)")
+            }
             methodBuilder.endControlFlow()
             methodBuilder.beginControlFlow("else")
             if (resultType.isNullable) {
@@ -106,7 +110,8 @@ internal class ParcellableParamBuilder(remoterInterfaceElement: KSClassDeclarati
                 methodBuilder.addStatement(paramName + " = " + getParcelableClassName(param.asType()) + "()")
             } else {
                 methodBuilder.beginControlFlow("if ( $DATA.readInt() != 0)")
-                methodBuilder.addStatement(paramName + " = " + getParcelableClassName(param.asType()) + ".CREATOR.createFromParcel($DATA) as " + param.asKotlinType())
+                val cast = if (param.asType().arguments.isNotEmpty()) " as " + param.asKotlinType() else ""
+                methodBuilder.addStatement(paramName + " = " + getParcelableClassName(param.asType()) + ".CREATOR.createFromParcel($DATA)" + cast)
                 methodBuilder.endControlFlow()
                 methodBuilder.beginControlFlow("else")
                 if (param.isNullable()) {
