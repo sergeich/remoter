@@ -118,7 +118,7 @@ class TestKotlinNonSuspendService {
         output = floatArrayOf(5f)
         inputOutput = floatArrayOf(6f)
         result = service.testFloat3(2f, input, output, inputOutput)
-        //Assert.assertArrayEquals(input, result)
+        Assert.assertTrue(input.contentEquals(result))
         Assert.assertEquals(2f, inputOutput[0])
 
     }

@@ -25,6 +25,10 @@ android {
     }
 }
 
+kotlin {
+    jvmToolchain(17)
+}
+
 dependencies {
     androidTestImplementation libs.junit
     androidTestImplementation libs.android.test.rules

@@ -11,6 +11,7 @@ import util.remoter.service.FooParcelable;
 import util.remoter.service.ISampleService;
 import util.remoter.service.ISampleServiceListener;
 
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class SampleServiceImpl extends ISampleService.Stub {
 
 
@@ -129,8 +130,7 @@ public class SampleServiceImpl extends ISampleService.Stub {
         //inOutMap.clear();
         inOutMap.putAll(inMap);
 
-        Map result = new HashMap();
-        result.putAll(inMap);
+        Map result = new HashMap(inMap);
         result.put("Result", 100);
         return result;
     }

@@ -18,6 +18,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +32,7 @@ import util.remoter.service.ISampleServiceListener;
  * <p>
  * Requires sampleservice-remoter to be installed
  */
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class AIDLClientToRemoterServerTest {
 
     private static final String TAG = AIDLClientToRemoterServerTest.class.getSimpleName();
@@ -330,7 +332,7 @@ public class AIDLClientToRemoterServerTest {
 
         FooParcelable[] result = sampleService.testParcelableArray(in, out, inOut);
 
-        Log.i(TAG, "Parcellable[] Result " + result);
+        Log.i(TAG, "Parcelable[] Result " + Arrays.toString(result));
 
         Assert.assertEquals(2, result.length);
 

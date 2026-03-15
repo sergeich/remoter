@@ -100,27 +100,23 @@ class TestKotlinNonSuspendService2 {
         result = service.testLong3(2, input, output, inputOutput)
         Assert.assertArrayEquals(input, result)
         Assert.assertEquals(2.toLong(), inputOutput[0])
-
     }
 
 
     @Test
     fun testFloat() {
-
         var input: FloatArray? = null
         var output: FloatArray? = null
         var inputOutput: FloatArray? = null
         var result = service.testFloat3(1f, input, output, inputOutput)
         Assert.assertNull(result)
 
-
         input = floatArrayOf(1f, 2f)
         output = floatArrayOf(5f)
         inputOutput = floatArrayOf(6f)
         result = service.testFloat3(2f, input, output, inputOutput)
-        //Assert.assertArrayEquals(input, result)
+        Assert.assertTrue(input.contentEquals(result))
         Assert.assertEquals(2f, inputOutput[0])
-
     }
 
 

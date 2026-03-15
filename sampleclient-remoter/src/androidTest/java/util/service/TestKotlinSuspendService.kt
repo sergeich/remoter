@@ -8,7 +8,13 @@ import org.junit.Before
 import org.junit.Test
 import remoter.RemoterProxy
 import remoter.builder.ServiceConnector
-import util.remoter.service.*
+import util.remoter.service.CustomData
+import util.remoter.service.FooParcelable
+import util.remoter.service.IExtE
+import util.remoter.service.ISampleKotlinService
+import util.remoter.service.ISampleKotlinServiceListener
+import util.remoter.service.ISampleKotlinService_Proxy
+import util.remoter.service.SimpleParcelable
 import java.io.IOException
 import java.util.concurrent.CountDownLatch
 
@@ -51,7 +57,7 @@ class TestKotlinSuspendService {
             output = booleanArrayOf(false)
             inputOutput = booleanArrayOf(false)
 
-            val result2:Boolean = service.testBoolean1(true, input, output, inputOutput)
+            val result2: Boolean = service.testBoolean1(true, input, output, inputOutput)
             Assert.assertTrue(result2)
             Assert.assertEquals(true, output[0])
             Assert.assertEquals(true, inputOutput[0])
@@ -81,7 +87,7 @@ class TestKotlinSuspendService {
             input = byteArrayOf(1, 2)
             output = byteArrayOf(5)
             inputOutput = byteArrayOf(6)
-            val result2:Byte = service.testByte1(2, input, output, inputOutput)
+            val result2: Byte = service.testByte1(2, input, output, inputOutput)
             Assert.assertEquals(2.toByte(), result2)
             Assert.assertEquals(2.toByte(), output[0])
             Assert.assertEquals(2.toByte(), inputOutput[0])
@@ -192,7 +198,7 @@ class TestKotlinSuspendService {
             output = floatArrayOf(5f)
             inputOutput = floatArrayOf(6f)
             result = service.testFloat3(2f, input, output, inputOutput)
-            //Assert.assertArrayEquals(input, result)
+            Assert.assertTrue(input.contentEquals(result))
             Assert.assertEquals(2f, inputOutput[0])
 
             input = floatArrayOf(1f, 2f)
@@ -203,10 +209,8 @@ class TestKotlinSuspendService {
             Assert.assertEquals(2f, result2)
             Assert.assertEquals(2f, inputOutput[0])
             Assert.assertEquals(2f, output[0])
-
         }
     }
-
 
     @Test
     fun testCharSeq() {
@@ -215,14 +219,11 @@ class TestKotlinSuspendService {
             var result = service.testCharSequence2(input)
             Assert.assertEquals(input, result)
 
-
             input = "Hello"
             result = service.testCharSequence2(input)
             Assert.assertEquals(input, result)
-
         }
     }
-
 
     @Test
     fun testString() {
@@ -584,7 +585,7 @@ class TestKotlinSuspendService {
     fun testException() {
         runBlocking {
             service.testException()
-       }
+        }
     }
 
 
