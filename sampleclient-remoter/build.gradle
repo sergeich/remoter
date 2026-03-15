@@ -32,8 +32,8 @@ dependencies {
     androidTestImplementation libs.junit
     androidTestImplementation libs.android.test.rules
 
-    implementation 'org.parceler:parceler-api:1.1.12'
-    kapt 'org.parceler:parceler:1.1.12'
+    implementation libs.parceler.api
+    kapt libs.parceler
 
 //After release
 //    api "com.josesamuel:remoter-annotations:$VERSION_NAME"
