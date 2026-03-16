@@ -6,6 +6,7 @@ import com.google.devtools.ksp.symbol.KSValueParameter
 import com.squareup.kotlinpoet.ClassName
 import com.squareup.kotlinpoet.FunSpec
 import com.squareup.kotlinpoet.KModifier
+import com.squareup.kotlinpoet.MAP
 import com.squareup.kotlinpoet.MemberName
 import com.squareup.kotlinpoet.ParameterSpec
 import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
@@ -147,8 +148,7 @@ class KMethodBuilder(
         }
         methodCall += ")"
 
-        methodBuilder.addStatement("val __gp_bundle = ${ParamBuilder.DATA}.readBundle(javaClass.getClassLoader())")
-        methodBuilder.addStatement("%T.set(__gp_bundle?.keySet()?.associateWith { __gp_bundle.getString(it) })", RemoterGlobalProperties::class.java)
+        methodBuilder.addStatement("%T.set(${ParamBuilder.DATA}.readHashMap(javaClass.getClassLoader()))", RemoterGlobalProperties::class.java)
 
         if (isSuspendFunction) {
             if (!isSuspendUnit) {
@@ -304,9 +304,7 @@ class KMethodBuilder(
             remoterCall = "_getRemoteServiceBinderSuspended().transact"
         }
 
-        methodBuilder.addStatement("val __gp_bundle = %T()", ClassName("android.os", "Bundle"))
-        methodBuilder.addStatement("__global_properties?.forEach { (k, v) -> __gp_bundle.putString(k, v.toString()) }")
-        methodBuilder.addStatement("${ParamBuilder.DATA}.writeBundle(if (__global_properties != null) __gp_bundle else null)")
+        methodBuilder.addStatement("${ParamBuilder.DATA}.writeMap(__global_properties as %T<*, *>?)", MAP)
 
         if (isOneWay) {
             methodBuilder.addStatement("$remoterCall(TRANSACTION_${methodName}_$methodIndex, ${ParamBuilder.DATA}, null, android.os.IBinder.FLAG_ONEWAY)")
