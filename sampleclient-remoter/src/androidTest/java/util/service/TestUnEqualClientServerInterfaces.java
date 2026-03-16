@@ -29,7 +29,7 @@ import util.remoter.service.IServiceInterfaceWithMoreMethods;
 public class TestUnEqualClientServerInterfaces {
 
     private static final String TAG = TestUnEqualClientServerInterfaces.class.getSimpleName();
-    private Object objectLock = new Object();
+    private final Object objectLock = new Object();
     private ISampleService sampleService;
 
 
@@ -54,8 +54,7 @@ public class TestUnEqualClientServerInterfaces {
     public ActivityTestRule<TestMemoryLeakActivity> mActivityRule = new ActivityTestRule<TestMemoryLeakActivity>(TestMemoryLeakActivity.class) {
         @Override
         protected Intent getActivityIntent() {
-            Intent intent = new Intent(INTENT_REMOTER_TEST_ACTIVITY);
-            return intent;
+            return new Intent(INTENT_REMOTER_TEST_ACTIVITY);
         }
     };
 
@@ -68,8 +67,9 @@ public class TestUnEqualClientServerInterfaces {
             mActivityRule.getActivity().startService(remoterServiceIntent);
             mActivityRule.getActivity().bindService(remoterServiceIntent, serviceConnection, 0);
 
-            objectLock.wait();
+            objectLock.wait(10000);
             Log.i(TAG, "Service connected");
+            Assert.assertNotNull("Service connection timed out", sampleService);
         }
     }
 

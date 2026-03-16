@@ -2,9 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <queries>
-        <intent>
-            <action android:name="util.remoter.service.ITimeService" />
-        </intent>
+        <package android:name="util.remoter.remoterservice" />
+        <package android:name="util.remoter.kotlinservice" />
     </queries>
 
     <application

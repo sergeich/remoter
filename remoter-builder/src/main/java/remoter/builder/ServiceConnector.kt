@@ -46,6 +46,9 @@ class ServiceConnector private constructor(
             }
             serviceDisconnectCallback = null
         }
+        synchronized(serviceConnectors) {
+            serviceConnectors.entries.removeAll { it.value === this }
+        }
     }
 
     override fun onServiceDisconnect(callback: (() -> Unit)?) {
@@ -54,6 +57,11 @@ class ServiceConnector private constructor(
 
     override fun onServiceConnect(callback: ((IBinder) -> Unit)?) {
         this.serviceConnectCallback = callback
+        // If already connected, immediately invoke so the proxy can initialize
+        val currentBinder = serviceBinder
+        if (currentBinder != null) {
+            launch { callback?.invoke(currentBinder) }
+        }
     }
 
     /**
@@ -115,8 +123,10 @@ class ServiceConnector private constructor(
          * @param flags Optional flags to use while binding with service. Default use [Context.BIND_AUTO_CREATE]
          */
         fun of(context: Context, explicitIntent: Intent, flags: Int = Context.BIND_AUTO_CREATE): IServiceConnector {
+            val component = explicitIntent.component
+                ?: throw IllegalStateException("Cannot resolve service for intent: ${explicitIntent.action}")
             synchronized(serviceConnectors) {
-                return serviceConnectors.getOrPut(explicitIntent.component!!) { ServiceConnector(context, explicitIntent, flags) }
+                return serviceConnectors.getOrPut(component) { ServiceConnector(context, explicitIntent, flags) }
             }
         }
 

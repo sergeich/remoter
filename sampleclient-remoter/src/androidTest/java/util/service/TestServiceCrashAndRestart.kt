@@ -43,7 +43,7 @@ class TestServiceCrashAndRestart {
             try {
                 timeService.simulateServiceCrash()
                 Assert.fail("Should have thrown exception")
-            } catch (ignored: Exception) {
+            } catch (_: Exception) {
                 Log.v("Test", "Caught expected exception")
             }
             delay(150)
@@ -55,7 +55,7 @@ class TestServiceCrashAndRestart {
             try {
                 timeService.simulateServiceCrash()
                 Assert.fail("Should have thrown exception")
-            } catch (ignored: Exception) {
+            } catch (_: Exception) {
                 Log.v("Test", "Caught expected exception")
             }
             delay(150)
@@ -65,6 +65,5 @@ class TestServiceCrashAndRestart {
             Assert.assertNotNull(time)
         }
     }
-
 
 }

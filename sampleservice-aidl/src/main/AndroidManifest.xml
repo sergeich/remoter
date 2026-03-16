@@ -3,6 +3,7 @@
 
     <queries>
         <package android:name="util.remoter.aidlservice" />
+        <package android:name="util.remoter.remoterservice" />
     </queries>
 
     <application
