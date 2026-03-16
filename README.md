@@ -144,9 +144,8 @@ val authenticated = service.authenticate(userName, password)
 ##### Notes on Kotlin support
 
 * Add remoter-builder dependency to get support for suspendable service connection using [IServiceConnector](remoter-builder/src/main/java/remoter/builder/IServiceConnector.kt)
-* vararg is not supported. Either use an array or a non-suspend function
-* If any return is nullable type on a suspend function, explicitly mark the method with @[NullableType](remoter-annotations/src/main/kotlin/remoter/annotations/NullableType.kt)
-* If any types in a generic parameter is nullable, explicitly mark those parameter with @[NullableType](remoter-annotations/src/main/kotlin/remoter/annotations/NullableType.kt) optionally specifying which indexes of that type parameter are nullable
+* If a suspend function has a nullable return type, explicitly annotate the method with [@NullableType](remoter-annotations/src/main/kotlin/remoter/annotations/NullableType.kt)
+* If any component of a generic parameter is nullable, explicitly mark the parameter with [@NullableType](remoter-annotations/src/main/kotlin/remoter/annotations/NullableType.kt) (optionally specifying the nullable indexes)
 
 
 
