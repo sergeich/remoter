@@ -149,7 +149,7 @@ class ServiceConnector private constructor(
         }
 
         /**
-         * Makes an implicit intent
+         * Makes an explicit Intent out of implicit Intent
          */
         private fun asExplicitIntent(context: Context, implicitIntent: Intent): Intent {
             val explicitIntent = Intent(implicitIntent)

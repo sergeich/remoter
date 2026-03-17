@@ -157,12 +157,12 @@ Gradle dependency
 ```groovy
 dependencies {
 
-    implementation 'me.sergeich:remoter-annotations:2.0.10'
-    ksp 'me.sergeich:remoter:2.0.10'
+    implementation 'me.sergeich:remoter-annotations:3.0.0'
+    ksp 'me.sergeich:remoter:3.0.0'
 
     // If you're using Kotlin coroutines, include following
     // to make the service connection even simpler
-    implementation 'me.sergeich:remoter-builder:2.0.10'
+    implementation 'me.sergeich:remoter-builder:3.0.0'
 }
 ```
 
