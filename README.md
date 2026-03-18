@@ -1,3 +1,5 @@
+[![Sonatype Central](https://maven-badges.sml.io/sonatype-central/me.sergeich/remoter/badge.svg)](https://maven-badges.sml.io/sonatype-central/me.sergeich/remoter/)
+
 # Remoter
 
 Remoter — An alternative to Android AIDL for Android remote IPC services using plain Kotlin interfaces
