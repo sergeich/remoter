@@ -2,6 +2,8 @@
 
 # Remoter
 
+> **Fork of [josesamuel/remoter](https://github.com/josesamuel/remoter).** This fork is Kotlin and KSP only — Java support and KAPT are dropped.
+
 Remoter — An alternative to Android AIDL for Android remote IPC services using plain Kotlin interfaces
 
 Remoter makes developing Android **remote services** intuitive **without messing with AIDL**.
