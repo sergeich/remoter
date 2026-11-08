@@ -117,7 +117,7 @@ interface ISampleService {
 * Include the dependency for RemoterBuilder to take advantage of suspendable service connection
 
 ```groovy
-implementation 'me.sergeich:remoter-builder:3.0.0-alpha'
+implementation 'me.sergeich:remoter-builder:3.0.0-beta'
 ```
 
 * From your coroutine, call the remote service call as follows
@@ -161,12 +161,12 @@ Gradle dependency
 ```groovy
 dependencies {
 
-    implementation 'me.sergeich:remoter-annotations:3.0.0-alpha'
-    ksp 'me.sergeich:remoter:3.0.0-alpha'
+    implementation 'me.sergeich:remoter-annotations:3.0.0-beta'
+    ksp 'me.sergeich:remoter:3.0.0-beta'
 
     // If you're using Kotlin coroutines, include following
     // to make the service connection even simpler
-    implementation 'me.sergeich:remoter-builder:3.0.0-alpha'
+    implementation 'me.sergeich:remoter-builder:3.0.0-beta'
 }
 ```
 
