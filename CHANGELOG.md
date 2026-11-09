@@ -1,6 +1,23 @@
 Change Log
 ==========
 
+Version 3.0.0-beta *(2026-11-08)*
+---------------------------------
+Defer @Remoter interfaces with unresolved types to next KSP round
+
+
+Version 3.0.0-alpha *(2026-03-17)*
+----------------------------------
+Fork published as me.sergeich:remoter. Kotlin and KSP only, Java and KAPT support dropped
+Support for suspend functions with varargs parameters
+Fix ServiceConnector race condition on reconnect
+
+
+Version 2.0.10 *(2025-12-18)*
+-----------------------------
+Handle same process for last method lookup
+
+
 Version 2.0.9 *(2025-11-14)*
 ----------------------------
 Fix for multi version support from multiple clients.
